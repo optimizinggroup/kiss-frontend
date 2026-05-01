@@ -149,3 +149,4 @@ KISS/
 - "What's the Supabase schema?" → `code/supabase/schema.sql` — 5 tables: tenants, submissions, reports, email_events, tenant_users.
 - "What's the architecture flow?" → `docs/KISS_v2_Technical_Handoff.md` § 3.1 has the one-paragraph flow diagram.
 - "What needs to happen before going live?" → `01-next-steps.md` Phase D (end-to-end test) + `docs/KISS_v2_Technical_Handoff.md` § 13 (known gaps & risks).
+# KISS - Ready for deployment
