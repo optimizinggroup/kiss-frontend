@@ -1,13 +1,14 @@
-# KISS — Current Status (as of 2026-05-01)
+# KISS — Current Status (as of 2026-05-01 16:45 UTC)
 
-## TL;DR
+## TL;DR — Deployment Roadmap
 
-**Two architectures. v2 is the canonical direction. Blueprint bumped to v2.2 today.**
+**Phase Progress:**
+- **Phase A** ✅ Complete — Supabase, Resend, PDF.co all deployed & credentials captured
+- **Phase B** 🟡 In Progress — Make.com scenario 65% done; Anthropic connection setup pending
+- **Phase C** 🟡 In Progress — Frontend scaffolding complete (Git repo initialized); GitHub + Vercel push next
+- **Phase D** ⏳ Pending — End-to-end testing (waits for B & C)
 
-- **v2.2 (Supabase + Vercel + React + Resend + PDF.co, no GHL):** Code complete. Iterated 2026-04-30 (renewal tracking added) and 2026-05-01 (auto/residential consumer-report branching + policy date extraction wired). **Zero deployment** — no accounts created, no DNS pointed, no end-to-end test run.
-- **v1 (GHL + Make + Gmail):** Lives in your Make account as scenario `4581471`. Live but never executed. **Will be paused** on v2 cutover, not deleted (rollback insurance).
-
-The blocker is account creation and deployment, not design or code.
+**Estimated live date**: ~30 minutes from now (after GitHub push + Vercel deploy + DNS propagation)
 
 ## What changed 2026-05-01
 

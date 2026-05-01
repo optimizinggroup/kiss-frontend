@@ -64,12 +64,10 @@ React form on Vercel → Supabase (Postgres + Storage + Auth + RLS) → Make.com
 - ✓ Supabase project created: `kiss-prod`, us-east-1, NANO tier, ID `diyctwdqmqwemswekyvb`
 - ✓ Schema deployed (all 5 tables, views, indexes, RLS policies, seed tenants)
 - ✓ Storage bucket created (`policies`, private, 25 MB, PDF-only)
-- ✓ All credentials captured → stored in `.env.local` (not tracked)
-  - SUPABASE_URL: `https://diyctwdqmqwemswekyvb.supabase.co`
-  - SUPABASE_ANON_KEY: `sb_publishable_-ogMeQXdbd9hhzCPony7uQ_R0CHsM6E`
-  - SUPABASE_SERVICE_ROLE_KEY: `sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL`
-  - RESEND_API_KEY: `re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98`
-  - PDFCO_API_KEY: `_IGUE3YoqTZvkmwk4DdJvN7xrpXBGETHntqWNH5Aeo2GD7LxdCtbU2lYRFMpo0edi`
+- ✓ All credentials captured → stored in `.env.local` (not tracked in git)
+  - See `.env.local` for all API keys and secrets
+  - Do NOT commit `.env.local` to version control
+  - For Vercel deployment, add env vars in Vercel Settings
 - ✓ Resend domain verified: `kiss.optimizinggroup.com`
 
 **⧗ Phase B In Progress (Make.com scenario) — SWITCHING TO CLAUDE**

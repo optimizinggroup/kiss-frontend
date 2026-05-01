@@ -5,8 +5,8 @@
     "trigger": "POST to webhook with body: { submission_id: <uuid> }",
     "env_vars_to_replace": [
       "https://diyctwdqmqwemswekyvb.supabase.co \u2014 e.g. https://abcdefg.supabase.co",
-      "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL \u2014 found in Supabase Dashboard \u2192 Settings \u2192 API",
-      "re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98 \u2014 found in Resend dashboard",
+      "YOUR_SUPABASE_SERVICE_ROLE_KEY \u2014 found in Supabase Dashboard \u2192 Settings \u2192 API",
+      "YOUR_RESEND_API_KEY \u2014 found in Resend dashboard",
       "_IGUE3YoqTZvkmwk4DdJvN7xrpXBGETHntqWNH5Aeo2GD7LxdCtbU2lYRFMpo0edi \u2014 for PDF text extraction (or substitute CloudConvert/equivalent)"
     ],
     "module_count": 14,
@@ -44,16 +44,16 @@
         "authenticationType": "noAuth"
       },
       "mapper": {
-        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}&select=*,tenants(*)",
+        "url": "https://YOUR_SUPABASE_URL.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}&select=*,tenants(*)",
         "method": "get",
         "headers": [
           {
             "name": "apikey",
-            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Authorization",
-            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Accept",
@@ -78,16 +78,16 @@
         "authenticationType": "noAuth"
       },
       "mapper": {
-        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}",
+        "url": "https://YOUR_SUPABASE_URL.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}",
         "method": "patch",
         "headers": [
           {
             "name": "apikey",
-            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Authorization",
-            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Content-Type",
@@ -113,16 +113,16 @@
         "authenticationType": "noAuth"
       },
       "mapper": {
-        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/storage/v1/object/sign/policies/{{2.pdf_storage_path}}",
+        "url": "https://YOUR_SUPABASE_URL.supabase.co/storage/v1/object/sign/policies/{{2.pdf_storage_path}}",
         "method": "post",
         "headers": [
           {
             "name": "apikey",
-            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Authorization",
-            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Content-Type",
@@ -161,7 +161,7 @@
             "value": "application/json"
           }
         ],
-        "rawContent": "{\"url\":\"https://https://diyctwdqmqwemswekyvb.supabase.co/storage/v1{{4.signedURL}}\",\"inline\":true,\"async\":false}",
+        "rawContent": "{\"url\":\"https://YOUR_SUPABASE_URL.supabase.co/storage/v1{{4.signedURL}}\",\"inline\":true,\"async\":false}",
         "contentType": "raw",
         "parseResponse": true
       },
@@ -433,16 +433,16 @@
         "authenticationType": "noAuth"
       },
       "mapper": {
-        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/reports",
+        "url": "https://YOUR_SUPABASE_URL.supabase.co/rest/v1/reports",
         "method": "post",
         "headers": [
           {
             "name": "apikey",
-            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Authorization",
-            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Content-Type",
@@ -477,7 +477,7 @@
         "headers": [
           {
             "name": "Authorization",
-            "value": "Bearer re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98"
+            "value": "Bearer YOUR_RESEND_API_KEY"
           },
           {
             "name": "Content-Type",
@@ -508,7 +508,7 @@
         "headers": [
           {
             "name": "Authorization",
-            "value": "Bearer re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98"
+            "value": "Bearer YOUR_RESEND_API_KEY"
           },
           {
             "name": "Content-Type",
@@ -546,16 +546,16 @@
         "authenticationType": "noAuth"
       },
       "mapper": {
-        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}",
+        "url": "https://YOUR_SUPABASE_URL.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}",
         "method": "patch",
         "headers": [
           {
             "name": "apikey",
-            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Authorization",
-            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+            "value": "Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY"
           },
           {
             "name": "Content-Type",
@@ -599,7 +599,7 @@
     "3. In Supabase: copy Project URL and service_role key from Settings \u2192 API",
     "4. In Resend: add and verify kiss.optimizinggroup.com domain (DKIM + SPF + DMARC records)",
     "5. In PDF.co (or alternative): create account, copy API key",
-    "6. In Make: import this blueprint, replace https://diyctwdqmqwemswekyvb.supabase.co / sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL / re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98 / _IGUE3YoqTZvkmwk4DdJvN7xrpXBGETHntqWNH5Aeo2GD7LxdCtbU2lYRFMpo0edi",
+    "6. In Make: import this blueprint, replace https://diyctwdqmqwemswekyvb.supabase.co / YOUR_SUPABASE_SERVICE_ROLE_KEY / YOUR_RESEND_API_KEY / _IGUE3YoqTZvkmwk4DdJvN7xrpXBGETHntqWNH5Aeo2GD7LxdCtbU2lYRFMpo0edi",
     "7. In Make: copy webhook URL from module 1 \u2014 set as VITE_MAKE_WEBHOOK_URL in the React frontend env",
     "8. Pause v1 scenario (id 4581471) but do not delete \u2014 keep for rollback",
     "9. Test end-to-end with seeded 'consumer' tenant before live partner onboarding",

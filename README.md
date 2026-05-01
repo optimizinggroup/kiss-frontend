@@ -1,23 +1,39 @@
 # KISS — Keep Insurance Super Simple
 
-**Single source of truth for the KISS insurance policy analysis project.**
+**Insurance Policy Analysis Service**
+
+Upload your homeowner's insurance policy PDF. KISS extracts coverage details, identifies gaps, and delivers a plain-English report in 5–10 minutes.
 
 ---
 
 ## What is KISS?
 
-A policy analysis service that takes a homeowner's insurance policy PDF, extracts structured data with GPT-4o, and produces a plain-English advisory report. Optionally, when a partner (insurance broker or property attorney) refers the homeowner, it produces a *second* report tailored to that partner's POV (broker advisory or pre-claim analysis) and emails both copies — homeowner gets the consumer report directly, partner gets both reports with the homeowner CC'd.
+A policy analysis service that takes a homeowner's insurance policy PDF, extracts structured data with Claude 3.5 Sonnet, and produces a plain-English advisory report. Optionally, when a partner (insurance broker or property attorney) refers the homeowner, it produces a *second* report tailored to that partner's POV (broker advisory or pre-claim analysis) and emails both copies — homeowner gets the consumer report directly, partner gets both reports with the homeowner CC'd.
 
 **No CRM lock-in.** Partners use whatever CRM they already use; KISS just emails them the report.
 
-## TWO architectures exist — read this first
+## Quick Start
 
-| | v1 (in Make today) | **v2 (canonical going forward)** |
-|---|---|---|
-| Trigger | GHL form submit | React form on Vercel |
-| Storage | GHL contact records | **Supabase** (5 tables, RLS, Storage bucket) |
-| File handling | GHL hosted URLs | Supabase Storage + signed URLs |
-| Email | Gmail (Make module) | **Resend** (verified domain) |
+```bash
+npm install
+npm run dev  # Start on http://localhost:3000
+```
+
+See `PHASE_C_NEXT_STEPS.md` for Vercel deployment.
+
+---
+
+## Architecture (v2 — Canonical)
+
+| Component | Technology |
+|-----------|------------|
+| **Frontend** | React 18 + Vite 5 + React Router |
+| **Hosting** | Vercel (kiss.optimizinggroup.com) |
+| **Database** | Supabase (PostgreSQL + Auth + Storage) |
+| **Orchestration** | Make.com webhook scenario |
+| **LLM** | Claude 3.5 Sonnet (35% cheaper than GPT-4o) |
+| **PDF Extraction** | PDF.co |
+| **Email** | Resend (verified domain) |
 | PDF text extraction | Raw bytes into GPT-4o | **PDF.co** → text → GPT-4o |
 | Multi-tenancy | Implicit via `tenant_persona` field | **Explicit `tenants` table** with slug + partner_code |
 | Make scenario | ID `4581471`, 18 modules, never executed | New blueprint, 16 modules, ready to import |
