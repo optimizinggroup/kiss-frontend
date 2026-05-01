@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KISS for Attorneys | A Marketing Engine for Property &amp; PI Firms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-deepest: #08152e;
+    --navy-deep:    #0e1f3f;
+    --navy:         #15295a;
+    --navy-light:   #1d3675;
+    --navy-text:    #0f1e3d;
+    --brand-blue:   #1e5fae;
+    --brand-cyan:   #2eb5e5;
+    --brand-cyan-2: #7dd3fc;
+    --warm:         #f6c66c;
+    --gray-50:  #f7f8fa;
+    --gray-100: #eef1f5;
+    --gray-200: #e0e5ed;
+    --gray-300: #c5cdd9;
+    --gray-700: #4a5673;
+    --gray-900: #1a2236;
+    --border-dark:        rgba(125, 211, 252, 0.12);
+    --border-dark-strong: rgba(125, 211, 252, 0.28);
+    --border-light:       rgba(15, 30, 61, 0.10);
+    --border-light-strong: rgba(15, 30, 61, 0.20);
+    --gradient-cool: linear-gradient(135deg, #2eb5e5 0%, #7dd3fc 100%);
+    --gradient-deep: linear-gradient(135deg, #1e5fae 0%, #2eb5e5 100%);
+    --font-sans: 'Albert Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font-sans); background: var(--navy-deepest); color: #fff; line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  img { max-width: 100%; height: auto; display: block; }
+  .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  .mockup-banner { background: var(--gray-100); border-bottom: 1px solid var(--border-light); padding: 8px 0; text-align: center; font-size: 0.78rem; color: var(--gray-700); letter-spacing: 0.05em; }
+  .mockup-banner strong { color: var(--brand-blue); font-weight: 700; }
+
+  /* NAV — light gray to match parent brand */
+  nav.navbar { position: sticky; top: 0; z-index: 100; background: rgba(238,241,245,0.92); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border-light); }
+  .nav-content { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; gap: 16px; }
+  .logo-link { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo-img { height: 50px; width: auto; }
+  @media (max-width: 700px) { .logo-img { height: 40px; } }
+  .nav-links { display: flex; gap: 4px; align-items: center; }
+  .nav-links a { color: var(--navy-text); text-decoration: none; padding: 9px 14px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; transition: all 0.2s; }
+  .nav-links a:hover { color: var(--brand-blue); background: rgba(30,95,174,0.06); }
+  .nav-cta { background: var(--brand-cyan); color: #0a1426 !important; padding: 10px 22px !important; border-radius: 999px; font-weight: 700 !important; box-shadow: 0 4px 14px rgba(46,181,229,0.35); }
+  .nav-cta:hover { background: var(--brand-blue) !important; color: #fff !important; }
+  @media (max-width: 880px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+  /* SECTIONS */
+  section.block { padding: 92px 0; position: relative; }
+  section.dark { background: var(--navy-deepest); color: #fff; }
+  section.darker { background: var(--navy-deep); color: #fff; border-top: 1px solid var(--border-dark); border-bottom: 1px solid var(--border-dark); }
+  section.light { background: var(--gray-100); color: var(--gray-900); border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); }
+  section.lighter { background: #fff; color: var(--gray-900); border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); }
+
+  /* HERO */
+  .hero { position: relative; padding: 88px 0 76px; text-align: center; overflow: hidden; background: var(--navy-deepest); }
+  .hero::before { content:''; position:absolute; top:-25%; left:50%; transform:translateX(-50%); width:1100px; height:700px; background: radial-gradient(circle at center, rgba(46,181,229,0.18) 0%, rgba(30,95,174,0.08) 35%, transparent 60%); filter: blur(50px); z-index:0; }
+  .hero > .container { position: relative; z-index: 1; }
+  .eyebrow { display:inline-block; font-size:0.78rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#2eb5e5; margin-bottom:22px; padding:6px 14px; background:rgba(46,181,229,0.08); border:1px solid rgba(46,181,229,0.25); border-radius:999px; }
+  .hero h1 { font-weight:600; font-size: clamp(2.4rem, 6vw, 4.4rem); line-height:1.05; letter-spacing:-0.025em; margin-bottom:22px; max-width:940px; margin-left:auto; margin-right:auto; color:#fff; }
+  .hero h1 em { font-style:normal; background: var(--gradient-cool); -webkit-background-clip:text; background-clip:text; color: transparent; }
+  .hero .lede { font-size: clamp(1.05rem,1.5vw,1.2rem); color:#c5d2e6; max-width:760px; margin:0 auto 28px; line-height:1.6; }
+
+  .cta-row { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:26px; }
+  .cta-row.left { justify-content: flex-start; }
+  .btn { display:inline-flex; align-items:center; gap:10px; padding:16px 28px; border-radius:999px; font-weight:700; font-size:1rem; text-decoration:none; cursor:pointer; border:none; transition: all .2s; font-family:inherit; }
+  .btn-primary { background:#2eb5e5; color:#0a1426; box-shadow: 0 6px 22px rgba(46,181,229,0.35); }
+  .btn-primary:hover { background:#7dd3fc; transform: translateY(-1px); }
+  .btn-dark { background: var(--navy-text); color: #fff; }
+  .btn-dark:hover { background: var(--brand-blue); }
+  .btn-ghost-dark { background: transparent; color:#fff; border:1px solid rgba(125,211,252,0.28); }
+  .btn-ghost-dark:hover { border-color:#2eb5e5; background: rgba(46,181,229,0.06); }
+  .btn-ghost-light { background: transparent; color: var(--navy-text); border: 1px solid var(--border-light-strong); }
+  .btn-ghost-light:hover { border-color: var(--brand-blue); color: var(--brand-blue); }
+  .btn .arrow { transition: transform .2s; }
+  .btn:hover .arrow { transform: translateX(3px); }
+
+  .hero-bullets { display:flex; flex-wrap:wrap; justify-content:center; gap:12px 28px; margin-top:14px; color:#7d90b3; font-size:0.95rem; list-style:none; padding:0; }
+  .hero-bullets li { display:flex; align-items:center; gap:8px; }
+  .hero-bullets .check { color:#2eb5e5; font-weight:700; }
+
+  /* WHO IT'S FOR — split */
+  .vertical-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 900px) { .vertical-grid { grid-template-columns: 1fr; } }
+  .vertical-card { background: #fff; border: 1px solid var(--border-light); border-radius: 22px; padding: 32px 28px; box-shadow: 0 1px 3px rgba(15,30,61,0.04); transition: all 0.3s; display: flex; flex-direction: column; }
+  .vertical-card:hover { border-color: var(--brand-cyan); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(15,30,61,0.08); }
+  .vertical-card .tag { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; margin-bottom: 14px; align-self: flex-start; background: rgba(30,95,174,0.10); color: var(--brand-blue); }
+  .vertical-card h3 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; color: var(--navy-text); }
+  .vertical-card .pitch { color: var(--brand-blue); font-size: 1rem; margin-bottom: 16px; font-weight: 600; }
+  .vertical-card p { color: var(--gray-700); font-size: 0.98rem; line-height: 1.6; margin-bottom: 14px; }
+  .vertical-card ul { list-style: none; margin-bottom: 0; }
+  .vertical-card li { padding: 8px 0; color: var(--gray-700); display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--border-light); font-size: 0.95rem; }
+  .vertical-card li:last-child { border-bottom: none; }
+  .vertical-card li .check { color: var(--brand-blue); font-weight: 700; flex-shrink: 0; }
+
+  /* SECTION HEADERS */
+  .section-eyebrow { text-align: center; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 16px; }
+  .dark .section-eyebrow, .darker .section-eyebrow { color: var(--brand-cyan); }
+  .light .section-eyebrow, .lighter .section-eyebrow { color: var(--brand-blue); }
+  h2.section-title { font-weight: 700; font-size: clamp(2rem, 4.2vw, 3.2rem); line-height: 1.1; letter-spacing: -0.02em; text-align: center; margin-bottom: 16px; }
+  .dark h2.section-title, .darker h2.section-title { color: #fff; }
+  .light h2.section-title, .lighter h2.section-title { color: var(--navy-text); }
+  h2.section-title em { font-style: normal; background: var(--gradient-deep); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .dark h2.section-title em, .darker h2.section-title em { background: var(--gradient-cool); -webkit-background-clip: text; background-clip: text; }
+  .section-sub { text-align: center; max-width: 740px; margin: 0 auto 56px; font-size: 1.05rem; }
+  .dark .section-sub, .darker .section-sub { color: #c5d2e6; }
+  .light .section-sub, .lighter .section-sub { color: var(--gray-700); }
+
+  /* PROCESS */
+  .process-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  @media (max-width: 900px) { .process-grid { grid-template-columns: 1fr; } }
+  .process-card { padding: 30px 28px; border-radius: 22px; border: 1px solid var(--border-dark); background: linear-gradient(165deg, rgba(46,181,229,0.05) 0%, rgba(30,95,174,0.02) 100%); min-height: 320px; display: flex; flex-direction: column; transition: all 0.3s; }
+  .process-card:hover { border-color: var(--border-dark-strong); transform: translateY(-3px); }
+  .process-card .step-num { width: 48px; height: 48px; border-radius: 12px; background: var(--gradient-deep); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; color: #fff; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(30,95,174,0.4); }
+  .process-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; color: #fff; }
+  .process-card p { color: #c5d2e6; font-size: 0.96rem; line-height: 1.6; }
+  .process-card .badge { margin-top: auto; padding-top: 14px; font-size: 0.85rem; color: #7d90b3; }
+  .process-card .badge strong { color: var(--brand-cyan); }
+
+  /* ROI CALCULATOR */
+  .roi-card { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid var(--border-light); border-radius: 24px; padding: 36px; box-shadow: 0 4px 24px rgba(15,30,61,0.05); }
+  .roi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+  @media (max-width: 700px) { .roi-row { grid-template-columns: 1fr; } }
+  .roi-row label { display: block; font-size: 0.82rem; color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-weight: 700; }
+  .roi-row .val { font-size: 2rem; color: var(--navy-text); margin-bottom: 8px; font-weight: 800; }
+  .roi-row input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; height: 4px; background: var(--gray-200); border-radius: 999px; outline: none; }
+  .roi-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--brand-blue); cursor: pointer; box-shadow: 0 0 0 4px rgba(30,95,174,0.18); }
+  .roi-row input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--brand-blue); cursor: pointer; border: none; }
+  .roi-result { background: linear-gradient(135deg, rgba(46,181,229,0.12), rgba(30,95,174,0.08)); border: 1px solid rgba(46,181,229,0.28); border-radius: 16px; padding: 22px; }
+  .roi-result .row { display: flex; justify-content: space-between; padding: 6px 0; color: var(--gray-700); font-size: 0.95rem; }
+  .roi-result .row.big { padding-top: 14px; margin-top: 8px; border-top: 1px solid var(--border-light); color: var(--navy-text); font-weight: 700; font-size: 1.15rem; }
+  .roi-result .row.big strong { background: var(--gradient-deep); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 1.4rem; }
+  .roi-disclaimer { color: var(--gray-700); font-size: 0.82rem; margin-top: 14px; text-align: center; }
+
+  /* PRICING */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  @media (max-width: 900px) { .pricing-grid { grid-template-columns: 1fr; } }
+  .price-card { background: #fff; border: 1px solid var(--border-light); border-radius: 22px; padding: 32px 28px; display: flex; flex-direction: column; position: relative; transition: all 0.3s; box-shadow: 0 1px 3px rgba(15,30,61,0.04); }
+  .price-card:hover { border-color: var(--brand-cyan); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(15,30,61,0.08); }
+  .price-card.featured { border-color: var(--brand-blue); box-shadow: 0 8px 32px rgba(30,95,174,0.18); }
+  .price-card.featured::before { content: 'Most Popular'; position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--brand-blue); color: #fff; padding: 4px 14px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+  .price-card h3 { font-size: 1.4rem; font-weight: 700; color: var(--navy-text); margin-bottom: 4px; }
+  .price-card .price-tag { color: var(--brand-blue); font-size: 0.9rem; font-weight: 600; margin-bottom: 16px; }
+  .price-card .price-amount { font-size: 2.6rem; font-weight: 800; color: var(--navy-text); line-height: 1; margin-bottom: 4px; letter-spacing: -0.02em; }
+  .price-card .price-suffix { color: var(--gray-700); font-size: 0.95rem; margin-bottom: 16px; }
+  .price-card .tokens-included { padding: 10px 14px; background: var(--gray-100); border: 1px solid var(--border-light); border-radius: 10px; font-size: 0.95rem; color: var(--navy-text); margin-bottom: 20px; }
+  .price-card .tokens-included strong { color: var(--brand-blue); font-weight: 800; }
+  .price-card ul { list-style: none; margin-bottom: 24px; flex-grow: 1; }
+  .price-card li { padding: 8px 0; color: var(--gray-700); display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--border-light); font-size: 0.95rem; }
+  .price-card li:last-child { border-bottom: none; }
+  .price-card li .check { color: var(--brand-blue); font-weight: 700; flex-shrink: 0; }
+  .price-card .price-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 22px; border-radius: 999px; font-weight: 700; font-size: 0.98rem; text-decoration: none; transition: all 0.2s; }
+  .price-card .price-cta.primary { background: var(--navy-text); color: #fff; }
+  .price-card .price-cta.primary:hover { background: var(--brand-blue); }
+  .price-card .price-cta.feature { background: var(--brand-blue); color: #fff; }
+  .price-card .price-cta.feature:hover { background: var(--brand-cyan); color: #0a1426; }
+
+  .reload-table { max-width: 760px; margin: 36px auto 0; padding: 24px 28px; background: #fff; border: 1px solid var(--border-light); border-radius: 16px; }
+  .reload-table h4 { font-size: 1.05rem; font-weight: 700; color: var(--navy-text); margin-bottom: 12px; }
+  .reload-table .row { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 10px 0; border-bottom: 1px solid var(--border-light); font-size: 0.95rem; color: var(--gray-700); }
+  .reload-table .row:last-child { border-bottom: none; }
+  .reload-table .row.head { font-weight: 800; color: var(--navy-text); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; padding-bottom: 8px; }
+  .reload-table .row strong { color: var(--brand-blue); }
+
+  /* COMPLIANCE */
+  .compliance-card { max-width: 880px; margin: 0 auto; background: linear-gradient(165deg, rgba(246,198,108,0.10) 0%, rgba(246,198,108,0.04) 100%); border: 1px solid rgba(246,198,108,0.32); border-radius: 22px; padding: 32px; }
+  .compliance-card h3 { font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 14px; }
+  .compliance-card p { color: #c5d2e6; font-size: 1rem; margin-bottom: 12px; line-height: 1.6; }
+  .compliance-card .badge { display: inline-block; background: var(--warm); color: #2a1d00; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+  .compliance-card ul { list-style: none; margin-top: 12px; }
+  .compliance-card li { padding: 6px 0; color: #c5d2e6; display: flex; align-items: flex-start; gap: 10px; font-size: 0.95rem; }
+  .compliance-card li .check { color: var(--warm); font-weight: 700; flex-shrink: 0; }
+
+  /* FAQ */
+  .faq-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 60px; align-items: start; }
+  @media (max-width: 800px) { .faq-grid { grid-template-columns: 1fr; gap: 32px; } }
+  .faq-grid h2 { text-align: left; }
+  .faq-grid .section-eyebrow { text-align: left; }
+  .faq-item { border-bottom: 1px solid var(--border-light); }
+  .faq-q { width: 100%; padding: 20px 0; background: transparent; border: none; color: var(--navy-text); font-size: 1.05rem; font-weight: 700; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-family: inherit; }
+  .faq-q .icon { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; font-size: 1.2rem; line-height: 1; color: var(--brand-blue); }
+  .faq-item.open .faq-q .icon { background: var(--brand-blue); color: #fff; transform: rotate(45deg); border-color: var(--brand-blue); }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; color: var(--gray-700); }
+  .faq-item.open .faq-a { max-height: 480px; padding-bottom: 20px; }
+
+  /* FINAL CTA */
+  .final-cta { padding: 110px 0; text-align: center; position: relative; overflow: hidden; background: var(--navy-deepest); }
+  .final-cta::before { content:''; position:absolute; inset:0; background: radial-gradient(circle at 50% 0%, rgba(46,181,229,0.14) 0%, transparent 60%); pointer-events:none; }
+  .final-cta h2 { font-weight: 700; color: #fff; font-size: clamp(2.2rem, 5vw, 3.6rem); line-height: 1.1; max-width: 880px; margin: 0 auto 24px; letter-spacing: -0.02em; }
+  .final-cta h2 em { font-style: normal; color: var(--brand-cyan); }
+  .final-cta p { color: #c5d2e6; font-size: 1.1rem; margin-bottom: 32px; }
+
+  /* FOOTER */
+  footer { border-top: 1px solid var(--border-dark); padding: 48px 0 28px; background: var(--navy-deep); color: #7d90b3; font-size: 0.9rem; }
+  footer .row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 22px; border-top: 1px solid var(--border-dark); }
+  .foot-logo-img { height: 50px; margin-bottom: 16px; background: rgba(255,255,255,0.06); padding: 8px; border-radius: 12px; }
+  footer .disclaimer { font-size: 0.82rem; color: #7d90b3; margin-top: 18px; max-width: 880px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="mockup-banner">
+  <div class="container"><strong>MOCKUP — </strong>KISS sales page targeting attorneys · Phase 1 (PI/auto + Property) · v1</div>
+</div>
+
+<nav class="navbar">
+  <div class="container nav-content">
+    <a href="../README.md" class="logo-link">
+      <img class="logo-img" src="https://optimizinggroup.com/wp-content/uploads/2025/05/optimizinggroup-favicon__1_-removebg-preview.png" alt="Optimizing Group">
+    </a>
+    <div class="nav-links">
+      <a href="#how">How It Works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#compliance">FL Bar Compliance</a>
+      <a href="#cta" class="nav-cta">Book a 15-min Demo</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <span class="eyebrow">Built for Florida PI &amp; Property Insurance Firms</span>
+    <h1>Every great relationship starts with a <em>KISS</em>.</h1>
+    <p class="lede" style="font-size:1.15rem; margin-bottom:18px;"><strong style="color:#fff;">KISS — Keep Insurance Super Simple</strong> — is a tool that helps your potential clients understand their insurance policy in plain English. What's covered. What isn't. Where they're underinsured, overinsured, or exposed because of buried exclusions and endorsements. Color-coded, easy to understand — KISS turns a 60-page policy into a 1-3 page evaluation the client can actually use.</p>
+    <p class="lede">Offer it free under your firm's brand, and KISS becomes a marketing engine that introduces your firm to clients <em>before</em> they need you. The client keeps the report. You reference it together if and when they need to file a claim. A 90-day automated email follow-up keeps you top-of-mind in between.</p>
+
+    <div class="cta-row">
+      <a href="#cta" class="btn btn-primary">Book a 15-min demo <span class="arrow">→</span></a>
+      <a href="#how" class="btn btn-ghost-dark">See how it works</a>
+    </div>
+
+    <ul class="hero-bullets">
+      <li><span class="check">✓</span> Built by a FL public adjuster · 14,000+ claims of experience</li>
+      <li><span class="check">✓</span> Designed around Florida Bar Chapter 4-7</li>
+      <li><span class="check">✓</span> Works with your CRM — Clio, MyCase, Salesforce, HubSpot</li>
+    </ul>
+  </div>
+</section>
+
+<!-- CREDIBILITY STRIP (NEW) -->
+<section class="darker" style="padding:36px 0;">
+  <div class="container">
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px; text-align:center;">
+      <div>
+        <div style="font-size:clamp(1.8rem,3.2vw,2.6rem); font-weight:800; background:var(--gradient-cool); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1; letter-spacing:-0.02em;">14,000+</div>
+        <div style="font-size:0.82rem; color:#7d90b3; margin-top:8px; text-transform:uppercase; letter-spacing:0.08em; font-weight:600;">Property Damage Claims</div>
+      </div>
+      <div>
+        <div style="font-size:clamp(1.8rem,3.2vw,2.6rem); font-weight:800; background:var(--gradient-cool); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1; letter-spacing:-0.02em;">FL Licensed</div>
+        <div style="font-size:0.82rem; color:#7d90b3; margin-top:8px; text-transform:uppercase; letter-spacing:0.08em; font-weight:600;">Public Adjuster</div>
+      </div>
+      <div>
+        <div style="font-size:clamp(1.8rem,3.2vw,2.6rem); font-weight:800; background:var(--gradient-cool); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1; letter-spacing:-0.02em;">Litigation</div>
+        <div style="font-size:0.82rem; color:#7d90b3; margin-top:8px; text-transform:uppercase; letter-spacing:0.08em; font-weight:600;">Support Co. Founder</div>
+      </div>
+      <div>
+        <div style="font-size:clamp(1.8rem,3.2vw,2.6rem); font-weight:800; background:var(--gradient-cool); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1; letter-spacing:-0.02em;">Color-Coded</div>
+        <div style="font-size:0.82rem; color:#7d90b3; margin-top:8px; text-transform:uppercase; letter-spacing:0.08em; font-weight:600;">Easy-to-Use Reports</div>
+      </div>
+    </div>
+    <p style="text-align:center; color:#c5d2e6; font-size:0.95rem; margin-top:28px; max-width:760px; margin-left:auto; margin-right:auto;">
+      KISS isn't another generic AI tool. It encodes the pattern recognition of a Florida public adjuster with 14,000+ claims of experience and a litigation support background — every flag, every recommendation, every buried exclusion call-out comes from someone who has seen what actually happens when policies meet claims.
+    </p>
+  </div>
+</section>
+
+<!-- TWO VERTICALS -->
+<section class="block lighter" id="who">
+  <div class="container">
+    <div class="section-eyebrow">Who KISS is for</div>
+    <h2 class="section-title">Two attorney verticals. <em>One marketing system.</em></h2>
+    <p class="section-sub">KISS is purpose-built for Florida plaintiff-side firms — the lawyers who represent the client, not the carrier.</p>
+
+    <div class="vertical-grid">
+      <div class="vertical-card">
+        <span class="tag">Personal Injury · Auto</span>
+        <h3>For PI / Auto Firms</h3>
+        <div class="pitch">Your client doesn't know they need you until they're hit by an uninsured driver.</div>
+        <p>KISS reviews drivers' auto policies and surfaces the gaps that matter — UM/UIM limits, PIP coverage, MedPay, stacking — so your firm becomes the resource they remember <em>before</em> the accident, not after.</p>
+        <ul>
+          <li><span class="check">✓</span> Auto policy review tailored to Florida no-fault PIP rules</li>
+          <li><span class="check">✓</span> 90-day educational sequence: glovebox checklist, first-hour playbook, coverage-gap education</li>
+          <li><span class="check">✓</span> Naturally introduces firm at the "is this offer fair?" moment</li>
+        </ul>
+      </div>
+
+      <div class="vertical-card">
+        <span class="tag">Property Insurance</span>
+        <h3>For Property Insurance Firms</h3>
+        <div class="pitch">Your client only thinks about you after the claim is denied. KISS gets your name in earlier.</div>
+        <p>KISS reviews residential and commercial property policies — homeowners, condo, dwelling fire, BOP, CGL — and surfaces the rebuild-cost gaps, exclusions, and coverage shortfalls that turn into denied claims later.</p>
+        <ul>
+          <li><span class="check">✓</span> Residential <em>and</em> commercial property policy review</li>
+          <li><span class="check">✓</span> 90-day sequence: pre-storm photo guide, first-48-hours-after-damage playbook, hurricane prep</li>
+          <li><span class="check">✓</span> Crescendos around Florida hurricane season conversion windows</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="text-align:center; margin-top: 36px; color: var(--gray-700); font-size: 0.95rem;">
+      Insurance broker version coming Phase 2. <a href="#cta" style="color: var(--brand-blue); font-weight: 700; text-decoration: none;">Get on the waitlist →</a>
+    </p>
+  </div>
+</section>
+
+<!-- SAMPLE REPORT PREVIEW -->
+<section class="block dark">
+  <div class="container">
+    <div class="section-eyebrow">What clients actually receive</div>
+    <h2 class="section-title">A 1-3 page report. <em>Color-coded.</em> Easy to understand.</h2>
+    <p class="section-sub">Turns a 60-page policy into a usable evaluation. Each finding gets a clear status: 🟢 Good, 🟡 Sufficient, or 🔴 Needs Attention — so the client knows in 30 seconds where they stand. They save it. You reference it with them if and when they need to file a claim.</p>
+
+    <div style="max-width:820px; margin: 0 auto; background:#fff; color:var(--navy-text); border-radius:18px; padding:32px; box-shadow: 0 12px 32px rgba(15,30,61,0.18);">
+      <div style="border-bottom:2px solid var(--brand-blue); padding-bottom:14px; margin-bottom:20px;">
+        <div style="color:var(--brand-blue); font-size:0.78rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase;">Sample Report Preview</div>
+        <h3 style="font-size:1.4rem; font-weight:700; margin-top:6px;">Your Insurance Policy Review</h3>
+        <div style="color:var(--gray-700); font-size:0.92rem; margin-top:4px;">Prepared for Sample Homeowner · 11777 Greenbriar Cir, Wellington FL · 2,500 sq ft · built 2005</div>
+      </div>
+
+      <div style="background:var(--gray-100); border-radius:10px; padding:16px 18px; margin-bottom:24px;">
+        <strong style="display:block; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--brand-blue); margin-bottom:6px;">Executive Summary</strong>
+        Your policy looks mostly OK, but there are two things that need fixing soon and one to watch at your next renewal. Specifically: your hurricane deductible is high, you have no flood contents coverage, and your dwelling limit is a little behind today's rebuild costs.
+      </div>
+
+      <h4 style="font-size:1rem; font-weight:700; margin-bottom:12px; color:var(--navy-text);">At a glance</h4>
+      <div style="display:grid; grid-template-columns: 2fr 1fr 1.4fr 2.6fr; gap:8px; font-size:0.92rem;">
+        <div style="padding:10px; background:var(--gray-50); font-weight:700; font-size:0.78rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--gray-700);">Coverage</div>
+        <div style="padding:10px; background:var(--gray-50); font-weight:700; font-size:0.78rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--gray-700);">Amount</div>
+        <div style="padding:10px; background:var(--gray-50); font-weight:700; font-size:0.78rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--gray-700);">Status</div>
+        <div style="padding:10px; background:var(--gray-50); font-weight:700; font-size:0.78rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--gray-700);">In plain English</div>
+
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);">Dwelling</div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);">$425,000</div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);"><span style="display:inline-block; padding:2px 10px; background:#fff5d6; color:#946a00; border-radius:999px; font-size:0.78rem; font-weight:700;">🟡 Sufficient</span></div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light); color:var(--gray-700);">A bit below today's FL rebuild costs.</div>
+
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);">Hurricane Deductible</div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);">5% / $21,250</div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);"><span style="display:inline-block; padding:2px 10px; background:#fde8e8; color:#a51919; border-radius:999px; font-size:0.78rem; font-weight:700;">🔴 Needs Attention</span></div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light); color:var(--gray-700);">You'd pay $21K out of pocket before help arrives.</div>
+
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);">Flood (NFIP)</div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);">Building only</div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light);"><span style="display:inline-block; padding:2px 10px; background:#fde8e8; color:#a51919; border-radius:999px; font-size:0.78rem; font-weight:700;">🔴 Needs Attention</span></div>
+        <div style="padding:10px; border-bottom:1px solid var(--border-light); color:var(--gray-700);">Your stuff isn't covered. Just the building.</div>
+
+        <div style="padding:10px;">Liability</div>
+        <div style="padding:10px;">$300,000</div>
+        <div style="padding:10px;"><span style="display:inline-block; padding:2px 10px; background:#d6f5e3; color:#0e6b40; border-radius:999px; font-size:0.78rem; font-weight:700;">🟢 Good</span></div>
+        <div style="padding:10px; color:var(--gray-700);">Strong protection if someone gets hurt on your property.</div>
+      </div>
+
+      <div style="margin-top:24px; padding:14px 18px; background:#fde8e8; border-left:4px solid #ef4444; border-radius:0 8px 8px 0;">
+        <strong style="color:#a51919; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase;">🔴 Your hurricane deductible is high</strong>
+        <p style="margin-top:6px; font-size:0.95rem; color:var(--gray-900);">Your hurricane deductible is 5% of your dwelling coverage — that's $21,250 you'd have to pay before insurance helps. Most Florida homeowners can get to a 2% deductible (about $8,500) for a small premium increase. <strong>What to do:</strong> Ask your agent about the cost difference. Often it's $15-30/month to save $12K out of pocket if a hurricane hits.</p>
+      </div>
+
+      <div style="margin-top:14px; padding:14px 18px; background:#fff5d6; border-left:4px solid #f6c66c; border-radius:0 8px 8px 0;">
+        <strong style="color:#946a00; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase;">🟡 Your dwelling limit is a little low</strong>
+        <p style="margin-top:6px; font-size:0.95rem; color:var(--gray-900);">Florida rebuild costs are about $200-250 per square foot in 2026. Your home is 2,500 sq ft, so it would cost $500K-$625K to rebuild. Your policy covers $425,000. <strong>What to do:</strong> Ask your agent to bump dwelling coverage to $550K at next renewal — usually adds $20-40/month and closes the gap.</p>
+      </div>
+
+      <div style="margin-top:24px; background:var(--gray-100); padding:18px 20px; border-radius:10px;">
+        <strong style="display:block; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--brand-blue); margin-bottom:10px;">What to do next</strong>
+        <ol style="padding-left:22px; font-size:0.95rem; color:var(--gray-900); line-height:1.7;">
+          <li>Call your agent this week and ask about lowering your hurricane deductible.</li>
+          <li>Before hurricane season, add contents coverage to your flood policy.</li>
+          <li>At your next renewal, increase your dwelling limit to keep up with rebuild costs.</li>
+        </ol>
+      </div>
+    </div>
+
+    <p style="text-align:center; margin-top:24px; color:#7d90b3; font-size:0.85rem;">
+      Sample for illustration. Real reports are personalized to each client's actual policy and property. The report is theirs to keep — and yours to reference together if they ever need to file a claim.
+    </p>
+  </div>
+</section>
+
+<!-- LIFETIME SHELF LIFE -->
+<section class="block lighter">
+  <div class="container">
+    <div class="section-eyebrow">Built for the long game</div>
+    <h2 class="section-title">A relationship with a <em>lifetime shelf life</em>.</h2>
+    <p class="section-sub">KISS doesn't end when the report is delivered. We track every client's policy expiration date — and 30 days before renewal, your firm automatically reminds them to upload the new policy. Every renewal becomes a fresh touchpoint. Every year, your database compounds in value.</p>
+
+    <div style="max-width:980px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;">
+      <div style="background: #fff; border: 1px solid var(--border-light); border-radius: 18px; padding: 28px; box-shadow: 0 1px 3px rgba(15,30,61,0.04);">
+        <div style="width:48px; height:48px; border-radius:12px; background: var(--gradient-deep); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; margin-bottom:18px; box-shadow: 0 4px 14px rgba(30,95,174,0.3);">📅</div>
+        <h3 style="font-size:1.2rem; font-weight:700; color: var(--navy-text); margin-bottom:8px;">Year 1 — Initial review</h3>
+        <p style="color: var(--gray-700); font-size:0.95rem; line-height:1.6;">Client uploads policy under your branded URL. KISS produces the color-coded review. They get the report. You get a new prospect in your CRM. The 90-day nurture sequence runs.</p>
+      </div>
+      <div style="background: #fff; border: 1px solid var(--border-light); border-radius: 18px; padding: 28px; box-shadow: 0 1px 3px rgba(15,30,61,0.04);">
+        <div style="width:48px; height:48px; border-radius:12px; background: var(--gradient-deep); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; margin-bottom:18px; box-shadow: 0 4px 14px rgba(30,95,174,0.3);">🔔</div>
+        <h3 style="font-size:1.2rem; font-weight:700; color: var(--navy-text); margin-bottom:8px;">Year 1 ends — renewal reminder fires</h3>
+        <p style="color: var(--gray-700); font-size:0.95rem; line-height:1.6;">30 days before the policy expires, KISS sends an automated email under your firm's brand: "Your policy renews soon. Send us your new one and we'll review it." Costs you one token — same as a new review.</p>
+      </div>
+      <div style="background: #fff; border: 1px solid var(--border-light); border-radius: 18px; padding: 28px; box-shadow: 0 1px 3px rgba(15,30,61,0.04);">
+        <div style="width:48px; height:48px; border-radius:12px; background: var(--gradient-deep); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; margin-bottom:18px; box-shadow: 0 4px 14px rgba(30,95,174,0.3);">♾️</div>
+        <h3 style="font-size:1.2rem; font-weight:700; color: var(--navy-text); margin-bottom:8px;">Year 2 onward — perpetual touchpoint</h3>
+        <p style="color: var(--gray-700); font-size:0.95rem; line-height:1.6;">Client uploads the renewed policy. KISS compares it against last year's review. New gaps surfaced. Nurture sequence runs again. You stay top-of-mind for as long as they have insurance — which is forever.</p>
+      </div>
+    </div>
+
+    <div style="max-width: 720px; margin: 36px auto 0; padding: 22px 24px; background: linear-gradient(135deg, rgba(46,181,229,0.08), rgba(30,95,174,0.04)); border: 1px solid rgba(46,181,229,0.22); border-radius: 14px; text-align: center;">
+      <strong style="color: var(--brand-blue); font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:6px;">The compounding math</strong>
+      <p style="color: var(--gray-900); font-size:1rem; line-height:1.6; margin:0;">Buy 500 tokens to onboard 500 clients in Year 1. Year 2, those same 500 clients show up again at renewal. Year 3, again. Same client base, fresh interactions every year — without paying for new lead generation. The token cost is just the cost of the renewed review, not new lead acquisition.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="block dark" id="how">
+  <div class="container">
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Three steps. <em>Every part automated.</em></h2>
+    <p class="section-sub">From first homeowner touch to 90-day relationship — your firm doesn't do anything except own the inbox.</p>
+
+    <div class="process-grid">
+      <div class="process-card">
+        <div class="step-num">1</div>
+        <h3>Your client gets a branded URL</h3>
+        <p>Your firm gets a private URL: <code style="color:#7dd3fc; font-size:0.92em;">kiss.optimizinggroup.com/your-firm</code>. Your logo, colors, and name on the form. The homeowner uploads their policy PDF; the form looks like it came from your firm.</p>
+        <div class="badge"><strong>Setup once.</strong> Per-firm branding lives in our database — no code changes for you.</div>
+      </div>
+      <div class="process-card">
+        <div class="step-num">2</div>
+        <h3>AI generates the review</h3>
+        <p>Within 5 minutes, GPT-4o analyzes the policy and produces a plain-English review for the homeowner — coverage breakdown, gaps, exclusions, and Florida-specific risks. Your firm and the homeowner both get the report by email.</p>
+        <div class="badge"><strong>$0.10–$0.50 cost</strong> per review (one token); homeowner sees a polished branded report.</div>
+      </div>
+      <div class="process-card">
+        <div class="step-num">3</div>
+        <h3>90-day nurture sequence runs</h3>
+        <p>Over the next 90 days, the homeowner gets four more educational emails from your firm — practical content like accident playbooks, hurricane prep, hidden coverage gaps. Every email is FL-Bar compliant and builds the relationship.</p>
+        <div class="badge"><strong>You don't write a thing.</strong> All sequence content is templated and personalized per homeowner.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROI CALCULATOR -->
+<section class="block light">
+  <div class="container">
+    <div class="section-eyebrow">Run your numbers</div>
+    <h2 class="section-title">What's this <em>actually worth</em> to your firm?</h2>
+    <p class="section-sub">Move the sliders. The math is conservative. Real conversion rates depend on your firm's follow-up — but the unit economics are clear.</p>
+
+    <div class="roi-card">
+      <div class="roi-row">
+        <div>
+          <label>Tokens (homeowners reviewed)</label>
+          <div class="val" id="tokOut">500</div>
+          <input type="range" id="tok" min="100" max="2500" value="500" step="100">
+        </div>
+        <div>
+          <label>Conversion rate (review → client)</label>
+          <div class="val" id="convOut">2%</div>
+          <input type="range" id="conv" min="1" max="10" value="2" step="1">
+        </div>
+      </div>
+      <div class="roi-row">
+        <div>
+          <label>Avg. fee per converted case</label>
+          <div class="val" id="feeOut">$8,000</div>
+          <input type="range" id="fee" min="3000" max="50000" value="8000" step="1000">
+        </div>
+        <div>
+          <label>Token price tier</label>
+          <div class="val" id="priceOut">$4 / token</div>
+          <input type="range" id="price" min="3" max="5" value="4" step="1">
+        </div>
+      </div>
+
+      <div class="roi-result">
+        <div class="row"><span>Cost of {{tokens}} tokens</span><span id="costOut">$2,000</span></div>
+        <div class="row"><span>Expected conversions</span><span id="convCountOut">10 clients</span></div>
+        <div class="row"><span>Expected total fees</span><span id="totalFeeOut">$80,000</span></div>
+        <div class="row big"><span>Net return</span><strong id="netOut">$78,000</strong></div>
+      </div>
+      <p class="roi-disclaimer">Conversion rates vary widely by firm follow-up quality. Past results do not guarantee future outcomes. Numbers are illustrative; this is not a promise of results.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="block lighter" id="pricing">
+  <div class="container">
+    <div class="section-eyebrow">Pricing</div>
+    <h2 class="section-title">Three tiers. <em>Hosting included.</em> Tokens never expire.</h2>
+    <p class="section-sub">Pick the package that fits your firm's volume. Reload tokens at any time — pricing improves with volume.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>Starter</h3>
+        <div class="price-tag">Branded review only</div>
+        <div class="price-amount">$497</div>
+        <div class="price-suffix">one-time setup · hosting included</div>
+        <div class="tokens-included"><strong>100 tokens</strong> included to start</div>
+        <ul>
+          <li><span class="check">✓</span> Branded URL with your logo, colors, name</li>
+          <li><span class="check">✓</span> AI-generated review, branded email delivery</li>
+          <li><span class="check">✓</span> Initial review email only (no follow-up sequence)</li>
+          <li><span class="check">✓</span> Hosting + delivery included indefinitely</li>
+          <li><span class="check">✓</span> Reload tokens at any time at $5 each</li>
+        </ul>
+        <a href="#cta" class="price-cta primary">Start with Starter →</a>
+      </div>
+
+      <div class="price-card featured">
+        <h3>Standard</h3>
+        <div class="price-tag">Marketing engine</div>
+        <div class="price-amount">$1,497</div>
+        <div class="price-suffix">one-time setup · hosting included</div>
+        <div class="tokens-included"><strong>500 tokens</strong> included to start</div>
+        <ul>
+          <li><span class="check">✓</span> Everything in Starter, plus:</li>
+          <li><span class="check">✓</span> 90-day automated email nurture sequence</li>
+          <li><span class="check">✓</span> Vertical-specific content (PI/auto OR Property)</li>
+          <li><span class="check">✓</span> FL Bar compliant disclaimers and footers</li>
+          <li><span class="check">✓</span> Reload tokens at $4 each (500+) or $3 each (1,000+)</li>
+        </ul>
+        <a href="#cta" class="price-cta feature">Choose Standard →</a>
+      </div>
+
+      <div class="price-card">
+        <h3>Pro</h3>
+        <div class="price-tag">Marketing engine + CRM integration</div>
+        <div class="price-amount">$2,997</div>
+        <div class="price-suffix">one-time setup · hosting included</div>
+        <div class="tokens-included"><strong>1,000 tokens</strong> included to start</div>
+        <ul>
+          <li><span class="check">✓</span> Everything in Standard, plus:</li>
+          <li><span class="check">✓</span> CRM integration via webhook (Clio, MyCase, Salesforce, HubSpot)</li>
+          <li><span class="check">✓</span> Quarterly strategy call with our team</li>
+          <li><span class="check">✓</span> Priority support &amp; FL Bar filing assistance</li>
+          <li><span class="check">✓</span> Reload tokens at $3 each (best rate)</li>
+        </ul>
+        <a href="#cta" class="price-cta primary">Choose Pro →</a>
+      </div>
+    </div>
+
+    <div class="reload-table">
+      <h4>Token reload pricing (any tier)</h4>
+      <div class="row head"><span>Tokens</span><span>Per token</span><span>Total</span></div>
+      <div class="row"><span>100</span><span>$5</span><span><strong>$500</strong></span></div>
+      <div class="row"><span>500</span><span>$4</span><span><strong>$2,000</strong></span></div>
+      <div class="row"><span>1,000</span><span>$3</span><span><strong>$3,000</strong></span></div>
+      <div class="row"><span>2,500</span><span>$2.60</span><span><strong>$6,500</strong></span></div>
+    </div>
+
+    <p style="text-align:center; margin-top: 28px; color: var(--gray-700); font-size: 0.92rem;">
+      Tokens never expire. No monthly fees. Use them at your firm's pace.
+    </p>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section class="block dark" id="compliance">
+  <div class="container">
+    <div class="compliance-card">
+      <span class="badge">FL Bar Built-In</span>
+      <h3>Built around Florida Bar Chapter 4-7 from day one.</h3>
+      <p>KISS isn't lawyer advertising bolted onto a SaaS platform — it's a marketing system designed specifically around Florida Bar Rules of Professional Conduct, Chapter 4-7. Every email template, intake form disclaimer, and report footer was structured to support compliance:</p>
+      <ul>
+        <li><span class="check">✓</span> Required content under Rule 4-7.12 (firm name, bona fide office, advertising disclosure)</li>
+        <li><span class="check">✓</span> Opt-in consent at intake, opt-out in every email — keeps comms outside 4-7.18 unsolicited-contact restrictions</li>
+        <li><span class="check">✓</span> No outcome guarantees, no comparative claims, no "specialist" misrepresentations (4-7.13, 4-7.14)</li>
+        <li><span class="check">✓</span> Required disclaimers in the report itself: "informational only, not legal advice, no attorney-client relationship"</li>
+        <li><span class="check">✓</span> Filing-package assistance for Rule 4-7.19 (Pro tier)</li>
+      </ul>
+      <p style="margin-top: 16px; font-size: 0.92rem;"><strong style="color: var(--warm);">A note on responsibility:</strong> KISS provides compliant template language and structure. Final compliance for your firm's specific rollout is yours — and we recommend FL counsel review before activation. We help you assemble the filing package; you (or your compliance counsel) sign off.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="block light">
+  <div class="container">
+    <div class="faq-grid">
+      <div>
+        <div class="section-eyebrow">FAQ</div>
+        <h2 class="section-title">Questions you probably have</h2>
+        <p style="color:var(--gray-700); margin-top: 14px;">Don't see yours? <a href="#cta" style="color:var(--brand-blue); font-weight: 700;">Just ask on the demo call →</a></p>
+      </div>
+      <div>
+        <div class="faq-item">
+          <button class="faq-q">Does this work with my CRM (Clio, MyCase, Salesforce, HubSpot)? <span class="icon">+</span></button>
+          <div class="faq-a"><p>Pro tier includes CRM integration via webhook to whichever CRM you already use. Each policy review delivered creates a record/lead in your CRM with the homeowner's contact info, the property/policy details, and the report attached. Standard and Starter tiers deliver everything by email instead — your firm forwards or imports manually if you want it in the CRM.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What if a homeowner I review has a claim against an insurer my firm already represents? <span class="icon">+</span></button>
+          <div class="faq-a"><p>Conflict checks are your responsibility. Best practice: run the homeowner's information through your conflict-check system before any active engagement. The free policy review itself does not create an attorney-client relationship (that's stated explicitly in the report disclaimer), so the conflict bar typically only applies if you actually take them on as a client. Discuss specifics with your compliance counsel.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Can I see the actual policy review and email sequence before I buy? <span class="icon">+</span></button>
+          <div class="faq-a"><p>Yes. On the demo call we'll show you a live review generated from a sample policy, walk through all five emails in your vertical's nurture sequence, and you can have your compliance counsel review the templates before activation. We'll also share the FL Bar compliance reference document.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What happens to the homeowner's data and policy PDF? <span class="icon">+</span></button>
+          <div class="faq-a"><p>Stored in our Supabase database under your firm's tenant. Policy PDFs auto-delete 90 days after report completion (PII retention policy — important for compliance). Contact info stays unless the homeowner unsubscribes, in which case the email address is permanently flagged and we never re-contact. You can export your full contact list at any time.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What's the conversion rate from free review to actual client? <span class="icon">+</span></button>
+          <div class="faq-a"><p>Honestly, we don't have firm benchmarks yet — KISS is in early launch with our first partners. Industry comparables for high-quality lead-magnet conversions in legal marketing typically fall 1-5%, depending heavily on the quality of follow-up after the nurture sequence. Use the ROI calculator above to model your firm's specifics. Past results do not guarantee future results, and conversion is heavily influenced by your firm's intake process.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Do tokens expire? Are reload purchases refundable? <span class="icon">+</span></button>
+          <div class="faq-a"><p>Tokens never expire. Use them at your firm's pace. Reload purchases are refundable on a pro-rated basis if you cancel within 30 days; non-refundable after 30 days but unused tokens remain in your account permanently and you can resume using them at any time.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">How does the renewal reminder work? Does it cost an extra token? <span class="icon">+</span></button>
+          <div class="faq-a"><p>KISS extracts the policy expiration date from every review and stores it. 30 days before expiration, an automated reminder email goes to the client under your firm's brand: "Your policy renews soon. Send us your new one and we'll review it." When they upload, that's a fresh review — and yes, that costs one token, same as any review. The advantage: you're not paying for new lead acquisition, just for the renewed review of an existing client. Year over year, your token spend gets you fresh touchpoints with the same client base, plus any new clients you add.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Can I run this in states other than Florida? <span class="icon">+</span></button>
+          <div class="faq-a"><p>Phase 1 is Florida-specific. The policy analysis prompts are tuned to Florida (PIP, hurricane, sinkhole, FL stacking rules), and the FL Bar compliance work doesn't transfer to other state bars. Multi-state expansion is on the roadmap for late 2026 — get on the waitlist on the demo call.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta" id="cta">
+  <div class="container">
+    <h2>Your next client is uploading their policy <em>somewhere</em>. <br>Make it your firm's URL.</h2>
+    <p>15-minute demo. We'll show you a live review, walk through compliance, and answer the awkward questions. No pressure.</p>
+    <div class="cta-row">
+      <a href="#" class="btn btn-primary">Book a 15-min demo <span class="arrow">→</span></a>
+      <a href="../README.md" class="btn btn-ghost-dark">Read the technical handoff</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <img class="foot-logo-img" src="https://optimizinggroup.com/wp-content/uploads/2025/05/optimizinggroup-favicon__1_-removebg-preview.png" alt="Optimizing Group">
+    <p style="max-width: 520px;">KISS — Keep Insurance Super Simple. A product of Optimizing Group LLC.</p>
+    <div class="row">
+      <div>© 2026 Optimizing Group LLC. All rights reserved.</div>
+      <div>hello@optimizinggroup.com</div>
+    </div>
+    <p class="disclaimer">
+      The information on this page is provided to attorneys evaluating KISS as a marketing platform and is not directed at consumers. KISS is a marketing technology service; the legal services provided through KISS-branded URLs are provided exclusively by the attorney whose brand is on each instance. Optimizing Group LLC does not provide legal services and is not a law firm. KISS is built around Florida Bar Chapter 4-7, but ultimate compliance for any specific firm's rollout is the responsibility of that firm and its compliance counsel. Past results do not guarantee future outcomes for any law firm using KISS.
+    </p>
+  </div>
+</footer>
+
+<script>
+  // ROI calculator
+  const tok = document.getElementById('tok');
+  const conv = document.getElementById('conv');
+  const fee = document.getElementById('fee');
+  const price = document.getElementById('price');
+  const tokOut = document.getElementById('tokOut');
+  const convOut = document.getElementById('convOut');
+  const feeOut = document.getElementById('feeOut');
+  const priceOut = document.getElementById('priceOut');
+  const costOut = document.getElementById('costOut');
+  const convCountOut = document.getElementById('convCountOut');
+  const totalFeeOut = document.getElementById('totalFeeOut');
+  const netOut = document.getElementById('netOut');
+  function fmt(n) { return '$' + n.toLocaleString(); }
+  function update() {
+    const t = parseInt(tok.value);
+    const c = parseInt(conv.value);
+    const f = parseInt(fee.value);
+    const p = parseInt(price.value);
+    tokOut.textContent = t.toLocaleString();
+    convOut.textContent = c + '%';
+    feeOut.textContent = fmt(f);
+    priceOut.textContent = '$' + p + ' / token';
+    const cost = t * p;
+    const conversions = Math.round(t * c / 100);
+    const totalFee = conversions * f;
+    const net = totalFee - cost;
+    costOut.textContent = fmt(cost);
+    convCountOut.textContent = conversions + ' clients';
+    totalFeeOut.textContent = fmt(totalFee);
+    netOut.textContent = fmt(net);
+  }
+  [tok, conv, fee, price].forEach(el => el.addEventListener('input', update));
+  update();
+
+  // FAQ
+  document.querySelectorAll('.faq-q').forEach(btn => {
+    btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
+  });
+</script>
+
+</body>
+</html>

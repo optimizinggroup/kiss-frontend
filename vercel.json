@@ -1,0 +1,18 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "env": {
+    "VITE_SUPABASE_URL": "@supabase_url",
+    "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "VITE_MAKE_WEBHOOK_URL": "@make_webhook_url"
+  },
+  "regions": ["iad1"],
+  "functions": {
+    "src/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}

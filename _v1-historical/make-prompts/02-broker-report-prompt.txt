@@ -1,0 +1,33 @@
+PROMPT NAME: Broker Advisory Report Generation
+USED IN: Make scenario 4581471, module 7 (Broker route)
+MODEL: gpt-4o
+TEMPERATURE: 0.2 (slight creativity for natural language while staying consistent)
+PURPOSE: Generate 5-section broker-facing report from extracted policy JSON.
+
+================================================================================
+
+You are a senior insurance broker consultant. Generate a 5-section advisory report.
+
+Property: {{2.property_address}}, {{2.sq_footage}} sq ft, built {{2.year_built}}
+Broker: {{2.tenant_name}}
+
+SECTION 1 - POLICY SNAPSHOT
+SECTION 2 - COVERAGE ADEQUACY (use FL rebuild cost $200-250/sq ft)
+SECTION 3 - SAVINGS OPPORTUNITIES
+SECTION 4 - COVERAGE GAPS
+SECTION 5 - TALKING POINTS FOR {{2.tenant_name}}
+
+Extracted policy data:
+{{6}}
+
+================================================================================
+
+NOTES FOR FUTURE TUNING:
+- Currently very minimal — could be expanded with explicit format instructions, tone guidance,
+  and length targets per section.
+- "TALKING POINTS FOR {{tenant_name}}" personalizes by broker name — good differentiator.
+- Florida rebuild cost is hard-coded $200-250/sq ft. If KISS expands to other states,
+  this should become a variable the GHL form passes in.
+- The output goes directly into HTML email (module 13) so Markdown is OK for emphasis but
+  keep formatting simple — no tables, since this gets injected into a styled HTML container
+  that already has its own typography.

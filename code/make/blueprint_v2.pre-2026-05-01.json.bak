@@ -1,0 +1,305 @@
+{
+  "name": "KISS Insurance Policy Review v2 - Supabase Pipeline",
+  "_README": {
+    "purpose": "Replace v1 (GHL-based, scenario 4581471). This version reads submissions from Supabase, processes the PDF, writes reports back to Supabase, and emails both homeowner and partner via Resend.",
+    "trigger": "POST to webhook with body: { submission_id: <uuid> }",
+    "env_vars_to_replace": [
+      "SUPABASE_URL — e.g. https://abcdefg.supabase.co",
+      "SUPABASE_SERVICE_ROLE_KEY — found in Supabase Dashboard → Settings → API",
+      "RESEND_API_KEY — found in Resend dashboard",
+      "PDFCO_API_KEY — for PDF text extraction (or substitute CloudConvert/equivalent)"
+    ],
+    "module_count": 14,
+    "estimated_cost_per_run": "$0.10 - $0.50 (mostly OpenAI tokens + PDF.co credits)"
+  },
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": { "hook": 0, "maxResults": 1 },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": { "parameters": { "hook": { "label": "KISS-v2-Submission-Trigger" } } }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": { "authenticationType": "noAuth" },
+      "mapper": {
+        "url": "https://SUPABASE_URL/rest/v1/submissions?id=eq.{{1.submission_id}}&select=*,tenants(*)",
+        "method": "get",
+        "headers": [
+          { "name": "apikey", "value": "SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Authorization", "value": "Bearer SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Accept", "value": "application/vnd.pgrst.object+json" }
+        ],
+        "parseResponse": true
+      },
+      "metadata": { "designer": { "x": 300, "y": 0 }, "label": "Fetch submission + tenant" }
+    },
+    {
+      "id": 3,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": { "authenticationType": "noAuth" },
+      "mapper": {
+        "url": "https://SUPABASE_URL/rest/v1/submissions?id=eq.{{1.submission_id}}",
+        "method": "patch",
+        "headers": [
+          { "name": "apikey", "value": "SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Authorization", "value": "Bearer SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "rawContent": "{\"status\":\"processing\",\"processing_started_at\":\"{{now}}\"}",
+        "contentType": "raw"
+      },
+      "metadata": { "designer": { "x": 600, "y": 0 }, "label": "Mark processing" }
+    },
+    {
+      "id": 4,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": { "authenticationType": "noAuth" },
+      "mapper": {
+        "url": "https://SUPABASE_URL/storage/v1/object/sign/policies/{{2.pdf_storage_path}}",
+        "method": "post",
+        "headers": [
+          { "name": "apikey", "value": "SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Authorization", "value": "Bearer SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "rawContent": "{\"expiresIn\": 600}",
+        "contentType": "raw",
+        "parseResponse": true
+      },
+      "metadata": { "designer": { "x": 900, "y": 0 }, "label": "Sign PDF URL (10 min)" }
+    },
+    {
+      "id": 5,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": { "authenticationType": "noAuth" },
+      "mapper": {
+        "url": "https://api.pdf.co/v1/pdf/convert/to/text",
+        "method": "post",
+        "headers": [
+          { "name": "x-api-key", "value": "PDFCO_API_KEY" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "rawContent": "{\"url\":\"https://SUPABASE_URL/storage/v1{{4.signedURL}}\",\"inline\":true,\"async\":false}",
+        "contentType": "raw",
+        "parseResponse": true
+      },
+      "metadata": { "designer": { "x": 1200, "y": 0 }, "label": "Extract PDF text" }
+    },
+    {
+      "id": 6,
+      "module": "openai-gpt-3:createModelResponse",
+      "version": 1,
+      "parameters": { "__IMTCONN__": 6008119 },
+      "mapper": {
+        "model": "gpt-4o",
+        "temperature": 0.1,
+        "input": "You are an insurance policy data extraction specialist. Extract the following fields from this insurance policy and return ONLY raw JSON with no markdown, no code blocks, no explanation.\n\nRequired JSON structure:\n{\n  \"named_insured\": \"\",\n  \"property_address\": \"\",\n  \"policy_number\": \"\",\n  \"policy_effective_date\": \"\",\n  \"policy_expiration_date\": \"\",\n  \"insurance_company\": \"\",\n  \"policy_type\": \"\",\n  \"coverages\": [{\"type\": \"\", \"limit\": \"\", \"deductible\": \"\"}],\n  \"exclusions\": [],\n  \"endorsements\": [],\n  \"total_annual_premium\": \"\"\n}\n\nIf a field cannot be found, use \"Not found\" as the value. Return ONLY the JSON object, nothing else.\n\nPolicy document content:\n{{5.body}}"
+      },
+      "metadata": { "designer": { "x": 1500, "y": 0 }, "label": "Extract policy JSON" }
+    },
+    {
+      "id": 7,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": { "json": "{{6.output[].content[].text}}" },
+      "metadata": { "designer": { "x": 1800, "y": 0 }, "label": "Parse extraction" }
+    },
+    {
+      "id": 8,
+      "module": "openai-gpt-3:createModelResponse",
+      "version": 1,
+      "parameters": { "__IMTCONN__": 6008119 },
+      "mapper": {
+        "model": "gpt-4o",
+        "temperature": 0.3,
+        "input": "You are a friendly, knowledgeable insurance advisor helping a homeowner understand their insurance policy in plain, everyday language. Avoid industry jargon.\n\nProperty Details:\n- Address: {{2.property_address}}\n- Square Footage: {{2.sq_footage}}\n- Year Built: {{2.year_built}}\n- Homeowner: {{2.contact_name}}\n\nGenerate a 6-section report in plain text (no markdown):\n\nYOUR POLICY AT A GLANCE — 3-4 sentence summary.\nWHAT YOU ARE COVERED FOR — list each coverage with plain-language explanation. Define 'deductible' the first time used.\nARE YOU COVERED ENOUGH? — calculate Florida rebuild at $200-250/sq ft, compare to dwelling coverage, flag any gap.\nWHAT IS NOT COVERED — list exclusions; emphasize flood, sinkhole, mold, wear-and-tear for FL.\nWAYS YOU COULD SAVE MONEY — 3-5 specific actions (wind mitigation, bundling, deductible adjustment, roof credits, security discount, shopping).\nWHAT TO DO NEXT — 3 action items: most urgent, before hurricane season, at renewal.\n\nKeep under 800 words. Warm, helpful, direct. End with: 'This report was generated by KISS (Keep Insurance Super Simple). For personalized advice, speak with a licensed insurance professional.'\n\nExtracted policy data:\n{{7}}"
+      },
+      "metadata": { "designer": { "x": 2100, "y": 0 }, "label": "Generate consumer report" }
+    },
+    {
+      "id": 9,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "filter": null,
+      "metadata": { "designer": { "x": 2400, "y": 0 }, "label": "Branch by persona" },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 10,
+              "filter": {
+                "name": "Broker tenant",
+                "conditions": [[{ "a": "{{2.tenants.persona}}", "b": "broker", "o": "text:equal" }]]
+              },
+              "module": "openai-gpt-3:createModelResponse",
+              "version": 1,
+              "parameters": { "__IMTCONN__": 6008119 },
+              "mapper": {
+                "model": "gpt-4o",
+                "temperature": 0.2,
+                "input": "You are a senior insurance broker consultant. Generate a 5-section advisory report.\n\nProperty: {{2.property_address}}, {{2.sq_footage}} sq ft, built {{2.year_built}}\nBroker: {{2.tenants.brand_name}}\n\nSECTION 1 - POLICY SNAPSHOT\nSECTION 2 - COVERAGE ADEQUACY (use FL rebuild cost $200-250/sq ft)\nSECTION 3 - SAVINGS OPPORTUNITIES\nSECTION 4 - COVERAGE GAPS\nSECTION 5 - TALKING POINTS FOR {{2.tenants.brand_name}}\n\nExtracted policy data:\n{{7}}"
+              },
+              "metadata": { "designer": { "x": 2700, "y": -300 }, "label": "Generate broker report" }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "filter": {
+                "name": "Attorney tenant",
+                "conditions": [[{ "a": "{{2.tenants.persona}}", "b": "attorney", "o": "text:equal" }]]
+              },
+              "module": "openai-gpt-3:createModelResponse",
+              "version": 1,
+              "parameters": { "__IMTCONN__": 6008119 },
+              "mapper": {
+                "model": "gpt-4o",
+                "temperature": 0.2,
+                "input": "You are a property damage attorney reviewing a policy pre-claim. Generate a 5-section report.\n\nProperty: {{2.property_address}}, {{2.sq_footage}} sq ft, built {{2.year_built}}\nAttorney: {{2.tenants.brand_name}}\n\nSECTION 1 - POLICY OVERVIEW\nSECTION 2 - CLAIM RISK ANALYSIS (HIGH/MEDIUM/LOW)\nSECTION 3 - FLORIDA-SPECIFIC CONCERNS\nSECTION 4 - DOCUMENT NOW\nSECTION 5 - TALKING POINTS FOR {{2.tenants.brand_name}}\n\nEnd with legal disclaimer.\n\nExtracted policy data:\n{{7}}"
+              },
+              "metadata": { "designer": { "x": 2700, "y": 300 }, "label": "Generate attorney report" }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 12,
+              "filter": {
+                "name": "Consumer tenant",
+                "conditions": [[{ "a": "{{2.tenants.persona}}", "b": "consumer", "o": "text:equal" }]]
+              },
+              "module": "util:SetVariables",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "scope": "roundtrip",
+                "variables": [{ "name": "skip_partner_report", "value": "true" }]
+              },
+              "metadata": { "designer": { "x": 2700, "y": 0 }, "label": "Skip partner report" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": { "authenticationType": "noAuth" },
+      "mapper": {
+        "url": "https://SUPABASE_URL/rest/v1/reports",
+        "method": "post",
+        "headers": [
+          { "name": "apikey", "value": "SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Authorization", "value": "Bearer SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "Prefer", "value": "return=minimal" }
+        ],
+        "rawContent": "[{\"submission_id\":\"{{1.submission_id}}\",\"tenant_id\":\"{{2.tenant_id}}\",\"report_type\":\"consumer\",\"extracted_json\":{{7}},\"report_body\":{{8.output[].content[].text}}},{\"submission_id\":\"{{1.submission_id}}\",\"tenant_id\":\"{{2.tenant_id}}\",\"report_type\":\"{{2.tenants.persona}}\",\"extracted_json\":{{7}},\"report_body\":{{ifempty(10.output[].content[].text;ifempty(11.output[].content[].text;\"\"))}}}]",
+        "contentType": "raw"
+      },
+      "metadata": { "designer": { "x": 3000, "y": 0 }, "label": "Save reports to Supabase" }
+    },
+    {
+      "id": 14,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": { "authenticationType": "noAuth" },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "post",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer RESEND_API_KEY" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "rawContent": "{\"from\":\"KISS Policy Review <reports@kiss.optimizinggroup.com>\",\"to\":[\"{{2.contact_email}}\"],\"subject\":\"Your KISS Policy Review Is Ready\",\"html\":\"<see email_homeowner.html template — substitute {{2.contact_name}}, {{2.tenants.brand_name}}, {{2.tenants.brand_color}}, {{8.output[].content[].text}}>\"}",
+        "contentType": "raw"
+      },
+      "metadata": { "designer": { "x": 3300, "y": -200 }, "label": "Email homeowner (consumer report)" }
+    },
+    {
+      "id": 15,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": { "authenticationType": "noAuth" },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "post",
+        "headers": [
+          { "name": "Authorization", "value": "Bearer RESEND_API_KEY" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "rawContent": "{\"from\":\"KISS Policy Review <reports@kiss.optimizinggroup.com>\",\"to\":[\"{{2.tenants.contact_email}}\"],\"cc\":[\"{{2.contact_email}}\"],\"subject\":\"New KISS Policy Review — {{2.contact_name}}\",\"html\":\"<see email_partner.html template — both reports embedded, branded with tenants.brand_color>\"}",
+        "contentType": "raw"
+      },
+      "metadata": { "designer": { "x": 3300, "y": 200 }, "label": "Email partner (only if persona != consumer)" },
+      "filter": {
+        "name": "Only for partner tenants",
+        "conditions": [[{ "a": "{{2.tenants.persona}}", "b": "consumer", "o": "text:notequal" }]]
+      }
+    },
+    {
+      "id": 16,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": { "authenticationType": "noAuth" },
+      "mapper": {
+        "url": "https://SUPABASE_URL/rest/v1/submissions?id=eq.{{1.submission_id}}",
+        "method": "patch",
+        "headers": [
+          { "name": "apikey", "value": "SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Authorization", "value": "Bearer SUPABASE_SERVICE_ROLE_KEY" },
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "rawContent": "{\"status\":\"completed\",\"processing_completed_at\":\"{{now}}\"}",
+        "contentType": "raw"
+      },
+      "metadata": { "designer": { "x": 3600, "y": 0 }, "label": "Mark completed" }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": true,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "us2.make.com"
+  },
+  "_SETUP_CHECKLIST": [
+    "1. In Supabase: run supabase_schema.sql",
+    "2. In Supabase: create storage bucket 'policies' (private, 25MB limit, application/pdf only)",
+    "3. In Supabase: copy Project URL and service_role key from Settings → API",
+    "4. In Resend: add and verify kiss.optimizinggroup.com domain (DKIM + SPF + DMARC records)",
+    "5. In PDF.co (or alternative): create account, copy API key",
+    "6. In Make: import this blueprint, replace SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / RESEND_API_KEY / PDFCO_API_KEY",
+    "7. In Make: copy webhook URL from module 1 — set as VITE_MAKE_WEBHOOK_URL in the React frontend env",
+    "8. Pause v1 scenario (id 4581471) but do not delete — keep for rollback",
+    "9. Test end-to-end with seeded 'consumer' tenant before live partner onboarding"
+  ]
+}

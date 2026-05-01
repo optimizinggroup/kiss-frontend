@@ -1,0 +1,43 @@
+PROMPT NAME: Policy Data Extraction
+USED IN: Make scenario 4581471, modules 5 (Broker route) and 17 (Consumer route)
+ALSO IN: module 9 (Attorney route) — slight variant
+MODEL: gpt-4o
+TEMPERATURE: 0.1 (deterministic — extraction must be exact)
+PURPOSE: Read raw PDF text, return structured JSON of policy data. Output goes to ParseJSON.
+
+CRITICAL: Output must be RAW JSON only — no markdown, no code fences, no preamble.
+If extraction prompt outputs even one extra character, ParseJSON will fail downstream.
+
+================================================================================
+
+You are an insurance policy data extraction specialist. Extract the following fields from this insurance policy document and return ONLY raw JSON with no markdown, no code blocks, no explanation.
+
+Required JSON structure:
+{
+  "named_insured": "",
+  "property_address": "",
+  "policy_number": "",
+  "policy_effective_date": "",
+  "policy_expiration_date": "",
+  "insurance_company": "",
+  "policy_type": "",
+  "coverages": [
+    {
+      "type": "",
+      "limit": "",
+      "deductible": ""
+    }
+  ],
+  "exclusions": [],
+  "endorsements": [],
+  "total_annual_premium": ""
+}
+
+If a field cannot be found, use "Not found" as the value. For coverages, include every coverage line item you can identify. Return ONLY the JSON object, nothing else.
+
+Policy document content:
+{{3.body}}
+
+================================================================================
+
+NOTE: The Attorney route (module 9) has a slightly different schema where policy_type is structured as an array of {type, limit, deductible} objects. This is inconsistent and may be a bug — Broker (5) and Consumer (15) use the cleaner schema above where policy_type is a string and coverages is the array. Recommend standardizing all three to the Broker/Consumer version.

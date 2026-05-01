@@ -1,0 +1,300 @@
+{
+  "_export_metadata": {
+    "exported_at": "2026-04-30",
+    "source": "Make.com API via Cowork session",
+    "scenario_id": 4581471,
+    "team_id": 1524441,
+    "organization_id": 5587731,
+    "zone": "us2.make.com",
+    "note": "This is the blueprint as retrieved from Make's API. Re-import via Make UI: Scenarios > Create New > Import Blueprint > paste the contents below (the 'blueprint' object is the one Make expects)."
+  },
+  "blueprint": {
+    "flow": [
+      {
+        "id": 1,
+        "module": "gateway:CustomWebHook",
+        "version": 1,
+        "parameters": {
+          "hook": 2088742,
+          "maxResults": 1
+        },
+        "mapper": {},
+        "metadata": {
+          "designer": {"x": 0, "y": 0},
+          "restore": {},
+          "parameters": [
+            {"name": "hook", "type": "hook:gateway-webhook", "label": "Webhook", "required": true}
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "module": "util:SetVariables",
+        "version": 1,
+        "parameters": {},
+        "mapper": {
+          "scope": "roundtrip",
+          "variables": [
+            {"name": "contact_name", "value": "{{1.contact_name}}"},
+            {"name": "contact_email", "value": "{{1.contact_email}}"},
+            {"name": "contact_phone", "value": "{{1.contact_phone}}"},
+            {"name": "property_address", "value": "{{1.property_address}}"},
+            {"name": "policy_type", "value": "{{1.policy_type}}"},
+            {"name": "sq_footage", "value": "{{1.sq_footage}}"},
+            {"name": "year_built", "value": "{{1.year_built}}"},
+            {"name": "file_url", "value": "{{1.file_url}}"},
+            {"name": "tenant_persona", "value": "{{1.tenant_persona}}"},
+            {"name": "tenant_name", "value": "{{1.tenant_name}}"},
+            {"name": "ghl_contact_id", "value": "{{1.ghl_contact_id}}"},
+            {"name": "ghl_webhook_url", "value": "{{1.ghl_webhook_url}}"}
+          ]
+        },
+        "metadata": {"designer": {"x": 300, "y": 0}}
+      },
+      {
+        "id": 3,
+        "module": "http:MakeRequest",
+        "version": 4,
+        "parameters": {"authenticationType": "noAuth"},
+        "mapper": {
+          "url": "{{2.file_url}}",
+          "method": "get",
+          "headers": [],
+          "shareCookies": false,
+          "parseResponse": false,
+          "allowRedirects": true,
+          "queryParameters": [],
+          "stopOnHttpError": true,
+          "requestCompressedContent": false
+        },
+        "metadata": {"designer": {"x": 600, "y": 0}}
+      },
+      {
+        "id": 4,
+        "module": "builtin:BasicRouter",
+        "version": 1,
+        "filter": null,
+        "mapper": null,
+        "metadata": {"designer": {"x": 900, "y": 0}},
+        "routes": [
+          {
+            "flow": [
+              {
+                "id": 5,
+                "module": "openai-gpt-3:createModelResponse",
+                "version": 1,
+                "parameters": {"__IMTCONN__": 6008119},
+                "filter": {
+                  "name": "Broker Persona",
+                  "conditions": [[{"a": "{{2.tenant_persona}}", "b": "broker", "o": "text:equal"}]]
+                },
+                "mapper": {
+                  "model": "gpt-4o",
+                  "temperature": 0.1,
+                  "input": "[See KISS/make/prompts/01-extraction-prompt.txt for full prompt]"
+                },
+                "metadata": {"designer": {"x": 1200, "y": -400}}
+              },
+              {
+                "id": 6,
+                "module": "json:ParseJSON",
+                "version": 1,
+                "parameters": {},
+                "mapper": {"json": "{{5.output[].content[].text}}"},
+                "metadata": {"designer": {"x": 1500, "y": -400}}
+              },
+              {
+                "id": 7,
+                "module": "openai-gpt-3:createModelResponse",
+                "version": 1,
+                "parameters": {"__IMTCONN__": 6008119},
+                "mapper": {
+                  "model": "gpt-4o",
+                  "temperature": 0.2,
+                  "input": "[See KISS/make/prompts/02-broker-report-prompt.txt for full prompt]"
+                },
+                "metadata": {"designer": {"x": 1800, "y": -400}}
+              },
+              {
+                "id": 8,
+                "module": "http:MakeRequest",
+                "version": 4,
+                "parameters": {"authenticationType": "noAuth"},
+                "mapper": {
+                  "url": "{{2.ghl_webhook_url}}",
+                  "method": "post",
+                  "headers": [{"name": "Content-Type", "value": "application/json"}],
+                  "rawContent": "{\"contact_id\":\"{{2.ghl_contact_id}}\",\"contact_name\":\"{{2.contact_name}}\",\"contact_email\":\"{{2.contact_email}}\",\"report_type\":\"broker\",\"report\":\"{{7.output[].content[].text}}\",\"status\":\"completed\",\"processed_at\":\"{{now}}\"}",
+                  "contentType": "raw",
+                  "shareCookies": false,
+                  "parseResponse": true,
+                  "allowRedirects": true,
+                  "queryParameters": [],
+                  "stopOnHttpError": false,
+                  "requestCompressedContent": true
+                },
+                "metadata": {"designer": {"x": 2100, "y": -400}}
+              },
+              {
+                "id": 13,
+                "module": "google-email:sendAnEmail",
+                "version": 4,
+                "parameters": {"__IMTCONN__": 7992256},
+                "mapper": {
+                  "to": ["{{2.contact_email}}"],
+                  "subject": "Your Insurance Policy Review - Broker Advisory Report",
+                  "bodyType": "rawHtml",
+                  "rawHtml": "[Broker email HTML template — see full blueprint via Make.com UI for exact HTML]"
+                },
+                "metadata": {"designer": {"x": 2400, "y": -400}}
+              }
+            ]
+          },
+          {
+            "flow": [
+              {
+                "id": 9,
+                "module": "openai-gpt-3:createModelResponse",
+                "version": 1,
+                "parameters": {"__IMTCONN__": 6008119},
+                "filter": {
+                  "name": "Attorney Persona",
+                  "conditions": [[{"a": "{{2.tenant_persona}}", "b": "attorney", "o": "text:equal"}]]
+                },
+                "mapper": {
+                  "model": "gpt-4o",
+                  "temperature": 0.1,
+                  "input": "[Attorney extraction prompt - has the schema bug noted in 01-extraction-prompt.txt]"
+                },
+                "metadata": {"designer": {"x": 1200, "y": 0}}
+              },
+              {
+                "id": 10,
+                "module": "json:ParseJSON",
+                "version": 1,
+                "parameters": {},
+                "mapper": {"json": "{{9.output[].content[].text}}"},
+                "metadata": {"designer": {"x": 1500, "y": 0}}
+              },
+              {
+                "id": 11,
+                "module": "openai-gpt-3:createModelResponse",
+                "version": 1,
+                "parameters": {"__IMTCONN__": 6008119},
+                "mapper": {
+                  "model": "gpt-4o",
+                  "temperature": 0.2,
+                  "input": "[See KISS/make/prompts/03-attorney-report-prompt.txt for full prompt]"
+                },
+                "metadata": {"designer": {"x": 1800, "y": 0}}
+              },
+              {
+                "id": 12,
+                "module": "http:MakeRequest",
+                "version": 4,
+                "parameters": {"authenticationType": "noAuth"},
+                "mapper": {
+                  "url": "{{2.ghl_webhook_url}}",
+                  "method": "post",
+                  "headers": [{"name": "Content-Type", "value": "application/json"}],
+                  "rawContent": "{\"contact_id\":\"{{2.ghl_contact_id}}\",\"contact_name\":\"{{2.contact_name}}\",\"contact_email\":\"{{2.contact_email}}\",\"report_type\":\"attorney\",\"report\":\"{{11.output[].content[].text}}\",\"status\":\"completed\",\"processed_at\":\"{{now}}\"}",
+                  "contentType": "raw",
+                  "shareCookies": false,
+                  "parseResponse": true,
+                  "allowRedirects": true,
+                  "queryParameters": [],
+                  "stopOnHttpError": false,
+                  "requestCompressedContent": true
+                },
+                "metadata": {"designer": {"x": 2100, "y": 0}}
+              },
+              {
+                "id": 14,
+                "module": "google-email:sendAnEmail",
+                "version": 4,
+                "parameters": {"__IMTCONN__": 7992256},
+                "mapper": {
+                  "to": ["{{2.contact_email}}"],
+                  "subject": "Your Insurance Policy Review - Pre-Claim Analysis Report",
+                  "bodyType": "rawHtml",
+                  "rawHtml": "[Attorney email HTML template — see full blueprint via Make.com UI for exact HTML]"
+                },
+                "metadata": {"designer": {"x": 2400, "y": 0}}
+              }
+            ]
+          },
+          {
+            "flow": [
+              {
+                "id": 15,
+                "module": "openai-gpt-3:createModelResponse",
+                "version": 1,
+                "parameters": {"__IMTCONN__": 6008119},
+                "filter": {
+                  "name": "Consumer Persona",
+                  "conditions": [[{"a": "{{2.tenant_persona}}", "b": "consumer", "o": "text:equal"}]]
+                },
+                "mapper": {
+                  "model": "gpt-4o",
+                  "temperature": 0.1,
+                  "input": "[See KISS/make/prompts/01-extraction-prompt.txt for full prompt]"
+                },
+                "metadata": {"designer": {"x": 1200, "y": 400}}
+              },
+              {
+                "id": 16,
+                "module": "json:ParseJSON",
+                "version": 1,
+                "parameters": {},
+                "mapper": {"json": "{{15.output[].content[].text}}"},
+                "metadata": {"designer": {"x": 1500, "y": 400}}
+              },
+              {
+                "id": 17,
+                "module": "openai-gpt-3:createModelResponse",
+                "version": 1,
+                "parameters": {"__IMTCONN__": 6008119},
+                "mapper": {
+                  "model": "gpt-4o",
+                  "temperature": 0.3,
+                  "input": "[See KISS/make/prompts/04-consumer-report-prompt.txt for full prompt]"
+                },
+                "metadata": {"designer": {"x": 1800, "y": 400}}
+              },
+              {
+                "id": 18,
+                "module": "google-email:sendAnEmail",
+                "version": 4,
+                "parameters": {"__IMTCONN__": 7992256},
+                "mapper": {
+                  "to": ["{{2.contact_email}}"],
+                  "subject": "Your KISS Policy Review Is Ready!",
+                  "bodyType": "rawHtml",
+                  "rawHtml": "[Consumer email HTML template with KISS branding + upsell CTA — see full blueprint via Make.com UI for exact HTML]"
+                },
+                "metadata": {"designer": {"x": 2400, "y": 400}}
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "name": "KISS Insurance Policy Review - Core Pipeline",
+    "metadata": {
+      "instant": true,
+      "version": 1,
+      "scenario": {
+        "dlq": false,
+        "dataloss": false,
+        "maxErrors": 3,
+        "autoCommit": true,
+        "sequential": false,
+        "confidential": false,
+        "freshVariables": false,
+        "autoCommitTriggerLast": true
+      }
+    },
+    "scheduling": {"type": "immediately"},
+    "interface": {"input": [], "output": []}
+  }
+}

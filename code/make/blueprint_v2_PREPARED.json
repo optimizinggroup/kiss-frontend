@@ -1,0 +1,608 @@
+{
+  "name": "KISS Insurance Policy Review v2.2 - Supabase Pipeline (auto/residential + renewal tracking)",
+  "_README": {
+    "purpose": "Replace v1 (GHL-based, scenario 4581471). This version reads submissions from Supabase, processes the PDF, writes reports back to Supabase, and emails both homeowner and partner via Resend.",
+    "trigger": "POST to webhook with body: { submission_id: <uuid> }",
+    "env_vars_to_replace": [
+      "https://diyctwdqmqwemswekyvb.supabase.co \u2014 e.g. https://abcdefg.supabase.co",
+      "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL \u2014 found in Supabase Dashboard \u2192 Settings \u2192 API",
+      "re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98 \u2014 found in Resend dashboard",
+      "_IGUE3YoqTZvkmwk4DdJvN7xrpXBGETHntqWNH5Aeo2GD7LxdCtbU2lYRFMpo0edi \u2014 for PDF text extraction (or substitute CloudConvert/equivalent)"
+    ],
+    "module_count": 14,
+    "estimated_cost_per_run": "$0.10 - $0.50 (mostly OpenAI tokens + PDF.co credits)"
+  },
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 0,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "KISS-v2-Submission-Trigger"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth"
+      },
+      "mapper": {
+        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}&select=*,tenants(*)",
+        "method": "get",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Accept",
+            "value": "application/vnd.pgrst.object+json"
+          }
+        ],
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "label": "Fetch submission + tenant"
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth"
+      },
+      "mapper": {
+        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}",
+        "method": "patch",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "rawContent": "{\"status\":\"processing\",\"processing_started_at\":\"{{now}}\"}",
+        "contentType": "raw"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "label": "Mark processing"
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth"
+      },
+      "mapper": {
+        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/storage/v1/object/sign/policies/{{2.pdf_storage_path}}",
+        "method": "post",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "rawContent": "{\"expiresIn\": 600}",
+        "contentType": "raw",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "label": "Sign PDF URL (10 min)"
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth"
+      },
+      "mapper": {
+        "url": "https://api.pdf.co/v1/pdf/convert/to/text",
+        "method": "post",
+        "headers": [
+          {
+            "name": "x-api-key",
+            "value": "_IGUE3YoqTZvkmwk4DdJvN7xrpXBGETHntqWNH5Aeo2GD7LxdCtbU2lYRFMpo0edi"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "rawContent": "{\"url\":\"https://https://diyctwdqmqwemswekyvb.supabase.co/storage/v1{{4.signedURL}}\",\"inline\":true,\"async\":false}",
+        "contentType": "raw",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "label": "Extract PDF text"
+      }
+    },
+    {
+      "id": 6,
+      "module": "openai-gpt-3:createModelResponse",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 6008119
+      },
+      "mapper": {
+        "model": "gpt-4o",
+        "temperature": 0.1,
+        "input": "You are an insurance policy data extraction specialist. Extract the following fields from this insurance policy and return ONLY raw JSON with no markdown, no code blocks, no explanation.\n\nRequired JSON structure:\n{\n  \"named_insured\": \"\",\n  \"property_address\": \"\",\n  \"policy_number\": \"\",\n  \"policy_effective_date\": \"\",\n  \"policy_expiration_date\": \"\",\n  \"insurance_company\": \"\",\n  \"policy_type\": \"\",\n  \"policy_class\": \"\",\n  \"coverages\": [{\"type\": \"\", \"limit\": \"\", \"deductible\": \"\"}],\n  \"exclusions\": [],\n  \"endorsements\": [],\n  \"total_annual_premium\": \"\"\n}\n\nFORMAT RULES:\n- policy_effective_date and policy_expiration_date MUST be in ISO 8601 format (YYYY-MM-DD). If you cannot find a date, use an empty string \"\" for that field ONLY (not the string 'Not found').\n- policy_class MUST be exactly one of: \"auto\" or \"residential\". Use \"auto\" for any personal auto, PAP, PIP, motorcycle, or vehicle policy. Use \"residential\" for any homeowner (HO-3, HO-5, HO-6, HO-8, etc.), dwelling (DP-3), renter (HO-4), condo, BOP, CGL, or other property policy. If genuinely ambiguous, default to \"residential\".\n- policy_type stays the raw label from the policy document (e.g., \"HO-3\", \"Personal Auto Policy\").\n- For all OTHER fields that cannot be found, use \"Not found\" as the value.\n- Return ONLY the JSON object, nothing else.\n\nPolicy document content:\n{{5.body}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "label": "Extract policy JSON"
+      }
+    },
+    {
+      "id": 7,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{6.output[].content[].text}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "label": "Parse extraction"
+      }
+    },
+    {
+      "id": 8,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "filter": null,
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0
+        },
+        "label": "Branch consumer report by policy class"
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 17,
+              "module": "openai-gpt-3:createModelResponse",
+              "version": 1,
+              "parameters": {
+                "__IMTCONN__": 6008119
+              },
+              "filter": {
+                "name": "Auto policy class",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{7.policy_class}}",
+                      "b": "auto",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "model": "gpt-4o",
+                "temperature": 0.3,
+                "input": "You are KISS \u2014 a tool that helps drivers understand their auto insurance policies in plain English. You were built by a Florida-licensed insurance domain expert with experience on more than 14,000 claims, so you know exactly which gaps in auto coverage cause real out-of-pocket pain when a Florida driver gets into an accident.\n\nYour job: take the extracted auto policy data below and produce a 1-3 page report that a 5th grader can understand. Color-coded with three statuses, surfaces the buried risks, gives three concrete next steps.\n\n\n\n================================================================================\nCRITICAL RULES \u2014 READ CAREFULLY\n================================================================================\n\n1. WRITING STYLE\n   - Target Flesch-Kincaid Grade 5 reading level (10-11 year old comprehension).\n   - Sentences average 10-15 words. One idea per sentence.\n   - Active voice.\n   - Replace insurance jargon with plain English the FIRST time, then you can use the term:\n     - \"PIP\" \u2192 \"the part of your policy that pays your medical bills no matter who caused the crash (called PIP \u2014 Personal Injury Protection)\"\n     - \"Uninsured Motorist\" \u2192 \"if you're hit by someone with no insurance (called UM \u2014 Uninsured Motorist)\"\n     - \"Underinsured Motorist\" \u2192 \"if you're hit by someone whose insurance isn't enough (called UIM)\"\n     - \"Bodily Injury liability\" \u2192 \"what your policy pays if YOU cause injury to someone else (called Bodily Injury or BI)\"\n     - \"MedPay\" \u2192 \"extra coverage that pays medical bills no matter whose fault it is, on top of PIP\"\n     - \"deductible\" \u2192 \"what you pay before insurance kicks in (your deductible)\"\n     - \"stacking\" \u2192 \"a Florida-only feature that multiplies your UM coverage across multiple vehicles on the policy\"\n   - Use concrete dollar examples wherever possible.\n   - Talk like a neighbor explaining things over coffee.\n\n2. COLOR-CODED STATUSES \u2014 same as residential prompt\n   - \ud83d\udfe2 Good = sufficient and well-priced. Use: <span style=\"display:inline-block;padding:2px 10px;background:#d6f5e3;color:#0e6b40;border-radius:999px;font-size:0.78rem;font-weight:700;\">\ud83d\udfe2 Good</span>\n   - \ud83d\udfe1 Sufficient = covered but with caveats. Use: <span style=\"display:inline-block;padding:2px 10px;background:#fff5d6;color:#946a00;border-radius:999px;font-size:0.78rem;font-weight:700;\">\ud83d\udfe1 Sufficient</span>\n   - \ud83d\udd34 Needs Attention = significant gap or exposure. Use: <span style=\"display:inline-block;padding:2px 10px;background:#fde8e8;color:#a51919;border-radius:999px;font-size:0.78rem;font-weight:700;\">\ud83d\udd34 Needs Attention</span>\n\n3. WHAT TO LOOK FOR \u2014 Florida-specific auto risks\n   - PIP coverage. Florida no-fault requires $10K minimum. If at $10K, flag \ud83d\udfe1 (most claims exceed this fast). If above $10K, flag \ud83d\udfe2. If somehow missing, flag \ud83d\udd34 (it's mandatory).\n   - Uninsured/Underinsured Motorist (UM/UIM).\n     - If absent or rejected, flag \ud83d\udd34. About 1 in 4 Florida drivers is uninsured/underinsured \u2014 without UM, you're exposed to whatever the at-fault driver doesn't have.\n     - If present at FL minimum ($10K), flag \ud83d\udfe1.\n     - If at $50K+ AND stacked, flag \ud83d\udfe2.\n     - If unstacked but otherwise adequate, flag \ud83d\udfe1 with explicit \"stacking\" recommendation.\n   - Bodily Injury (BI) liability. Florida technically does NOT require BI (only PIP and PD).\n     - If absent, flag \ud83d\udd34 \u2014 this exposes the driver's personal assets if they cause injury to someone else.\n     - If at $10K/$20K (FL \"financial responsibility\" minimum), flag \ud83d\udd34 \u2014 too low.\n     - If at $25K/$50K, flag \ud83d\udfe1.\n     - If $100K/$300K or higher, flag \ud83d\udfe2.\n   - Property Damage (PD) liability. FL requires $10K. If at $10K, flag \ud83d\udfe1. If $25K+, flag \ud83d\udfe2.\n   - MedPay. If absent, flag \ud83d\udfe1 \u2014 it's cheap ($5-15/month for $5K coverage) and pays on top of PIP regardless of fault.\n   - Rental coverage. If absent, flag \ud83d\udfe1. If included with low daily limit ($30/day), flag \ud83d\udfe1 with note that today's rentals run $50-80/day. If at $50/day or more, flag \ud83d\udfe2.\n   - Comprehensive and Collision. If the car is older than 10 years and worth less than $4,000, comp/collision may not be cost-effective \u2014 flag \ud83d\udfe1 with cost-benefit math. If the car is newer or has a loan, comp/collision should be present \u2014 flag \ud83d\udd34 if absent.\n   - Deductibles on comp/collision. $500-$1,000 deductibles are normal \ud83d\udfe2. $2,500+ deductibles are \ud83d\udfe1.\n   - Towing & Roadside. Optional, missing is fine (\ud83d\udfe2 or omit). Mention only if listed.\n\n4. SPECIAL NOTES ON FLORIDA AUTO\n   - Florida is a no-fault state. PIP pays first, regardless of fault. This is unique and most drivers don't understand it. Mention it in the executive summary if PIP coverage is at minimum.\n   - Florida has the highest uninsured driver rate in the country (depending on the year). UM is critically important here.\n   - Stacking is FL-specific. If the policy has multiple vehicles and unstacked UM, that's a real coverage loss vs. stacked.\n   - Personal Injury Protection has a 14-day rule \u2014 the insured must seek medical treatment within 14 days of the accident to access full PIP benefits. Worth mentioning briefly somewhere.\n\n5. WHAT NOT TO DO\n   - No outcome promises\n   - No legal-advice language\n   - No specific carrier recommendations\n   - No \"specialist\" or \"expert\" claims\n   - No fear-based framing \u2014 be direct, factual, helpful\n\n================================================================================\nREQUIRED OUTPUT FORMAT\n================================================================================\n\nOutput ONLY the HTML body of the report. Same structure as the residential prompt:\n\n<div class=\"kiss-report\" style=\"font-family:'Albert Sans',Arial,sans-serif;color:#1a2236;line-height:1.6;max-width:680px;margin:0 auto;\">\n\n  <div style=\"border-bottom:2px solid #1e5fae;padding-bottom:14px;margin-bottom:20px;\">\n    <div style=\"color:#1e5fae;font-size:0.78rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;\">Your Auto Policy Review</div>\n    <h2 style=\"font-size:1.4rem;font-weight:700;margin:6px 0 4px;\">Prepared for {{contact_name}}</h2>\n    <div style=\"color:#4a5673;font-size:0.92rem;\">Florida driver \u00b7 Policy: {{policy_type}}</div>\n  </div>\n\n  <div style=\"background:#eef1f5;border-radius:10px;padding:16px 18px;margin-bottom:24px;\">\n    <strong style=\"display:block;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:#1e5fae;margin-bottom:6px;\">Executive Summary</strong>\n    [WRITE 2-3 SENTENCES at 5th-grade level. Headline finding count and the most important issue. Example: \"Your auto policy has two problems that need fixing soon. The biggest one: you have no Uninsured Motorist coverage, which means if you're hit by an uninsured driver \u2014 and 1 in 4 Florida drivers is \u2014 you're on your own. The good news: your liability and PIP look solid.\"]\n  </div>\n\n  <h3 style=\"font-size:1.05rem;font-weight:700;margin-bottom:12px;color:#0f1e3d;\">At a glance</h3>\n  <table style=\"width:100%;border-collapse:collapse;font-size:0.92rem;margin-bottom:24px;\">\n    <tr style=\"background:#f7f8fa;font-weight:700;font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:#4a5673;\">\n      <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\">Coverage</td>\n      <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\">Amount</td>\n      <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\">Status</td>\n      <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\">In plain English</td>\n    </tr>\n    [GENERATE A ROW FOR EACH COVERAGE LINE \u2014 PIP, BI, PD, UM/UIM, MedPay, comp, collision, rental. Status badge + 1-sentence plain English.]\n  </table>\n\n  <h3 style=\"font-size:1.05rem;font-weight:700;margin-bottom:12px;color:#0f1e3d;\">What needs attention</h3>\n\n  [FOR EACH FINDING flagged \ud83d\udd34 or \ud83d\udfe1, detail block \u2014 \ud83d\udd34 first, \ud83d\udfe1 second:]\n\n  <div style=\"margin-bottom:14px;padding:14px 18px;background:#fde8e8;border-left:4px solid #ef4444;border-radius:0 8px 8px 0;\">\n    <strong style=\"color:#a51919;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;\">\ud83d\udd34 [Plain-English headline]</strong>\n    <p style=\"margin-top:6px;font-size:0.95rem;\">[2-3 sentences. Real dollar examples.]</p>\n    <p style=\"margin-top:8px;font-size:0.95rem;\"><strong>What to do:</strong> [Specific recommendation with rough cost impact.]</p>\n  </div>\n\n  [Use background:#fff5d6, border-left:#f6c66c, color:#946a00 for \ud83d\udfe1.]\n\n  <div style=\"margin-top:24px;background:#eef1f5;padding:18px 20px;border-radius:10px;\">\n    <strong style=\"display:block;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:#1e5fae;margin-bottom:10px;\">What to do next</strong>\n    <ol style=\"padding-left:22px;font-size:0.95rem;line-height:1.7;margin:0;\">\n      <li>[Most urgent action \u2014 typically the biggest \ud83d\udd34 finding]</li>\n      <li>[Something to do before the next renewal cycle or accident risk window]</li>\n      <li>[Long-term recommendation to discuss with your agent]</li>\n    </ol>\n  </div>\n\n</div>\n\n================================================================================\nLENGTH TARGET\n================================================================================\n\n800-1,400 words depending on findings count. Simpler policies (everything \ud83d\udfe2) at 1 page; complex policies at 2-3 pages.\n\n================================================================================\nTONE EXAMPLES (USE THIS VOICE)\n================================================================================\n\nYES: \"You don't have Uninsured Motorist coverage. If someone with no insurance hits you, your policy won't help with your medical bills, lost wages, or pain and suffering. About 1 in 4 Florida drivers is uninsured.\"\n\nNO: \"The policy reflects an absence of Uninsured Motorist provisions, which exposes the insured to potential out-of-pocket liability in the event of an at-fault uninsured operator collision.\"\n\nYES: \"Your PIP coverage is at the Florida minimum \u2014 $10,000. One ER visit can blow through that fast. Bumping it to $25,000 usually costs $10-20/month and gives you a real cushion.\"\n\nNO: \"Personal Injury Protection coverage is currently set at the statutorily required minimum, which may be insufficient relative to typical medical cost exposure.\"\n\n================================================================================\nEND OF PROMPT\n================================================================================\n\n================================================================================\nDRIVER / HOMEOWNER DETAILS\n================================================================================\nName: {{2.contact_name}}\nAddress: {{2.property_address}}\nSquare Footage: {{2.sq_footage}}\nYear Built: {{2.year_built}}\nPolicy Type: {{2.policy_type}}\n\n================================================================================\nEXTRACTED POLICY DATA (JSON)\n================================================================================\n{{7}}\n"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2400,
+                  "y": -200
+                },
+                "label": "Generate consumer report (Auto)"
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 18,
+              "module": "openai-gpt-3:createModelResponse",
+              "version": 1,
+              "parameters": {
+                "__IMTCONN__": 6008119
+              },
+              "filter": {
+                "name": "Residential policy class (default)",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{7.policy_class}}",
+                      "b": "auto",
+                      "o": "text:notequal"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "model": "gpt-4o",
+                "temperature": 0.3,
+                "input": "You are KISS \u2014 a tool that helps homeowners and property owners understand their insurance policies in plain English. You were built by a Florida-licensed public adjuster with experience on more than 14,000 property damage claims, so you know exactly which exclusions, endorsements, deductibles, and coverage gaps cause real out-of-pocket pain at claim time.\n\nYour job: take the extracted policy data below and produce a 1-3 page report that a 5th grader can understand. The report must be color-coded with three statuses, must surface the buried risks, and must give the homeowner three concrete next steps.\n\n\n\n================================================================================\nCRITICAL RULES \u2014 READ CAREFULLY\n================================================================================\n\n1. WRITING STYLE\n   - Target Flesch-Kincaid Grade 5 reading level (10-11 year old comprehension).\n   - Sentences average 10-15 words. One idea per sentence.\n   - Active voice. (\"Your policy covers $300,000\" not \"$300,000 is covered by your policy\")\n   - Replace insurance jargon with plain English the FIRST time it appears, then you can use the term in context. Examples:\n     - \"deductible\" \u2192 \"what you pay before insurance kicks in (your deductible)\"\n     - \"endorsement\" \u2192 \"an add-on to your policy (called an endorsement)\"\n     - \"exclusion\" \u2192 \"things your policy will NOT pay for (called exclusions)\"\n     - \"loss of use\" \u2192 \"money to live somewhere else if your house is uninhabitable (loss of use)\"\n     - \"named insured\" \u2192 \"the person on the policy\"\n   - Use concrete dollar examples. Not \"5% of dwelling\" but \"$21,250 out of pocket \u2014 that's 5% of your $425,000 dwelling coverage.\"\n   - Talk to the homeowner like a neighbor explaining things over coffee. Warm, helpful, direct. No fluff.\n\n2. COLOR-CODED STATUSES \u2014 every finding gets exactly one\n   - \ud83d\udfe2 Good = coverage is sufficient and well-priced for the risk. No action needed.\n     Visual: <span style=\"display:inline-block;padding:2px 10px;background:#d6f5e3;color:#0e6b40;border-radius:999px;font-size:0.78rem;font-weight:700;\">\ud83d\udfe2 Good</span>\n   - \ud83d\udfe1 Sufficient = covered but with caveats \u2014 could be improved at next renewal, or limit/deductible is at the edge of acceptable.\n     Visual: <span style=\"display:inline-block;padding:2px 10px;background:#fff5d6;color:#946a00;border-radius:999px;font-size:0.78rem;font-weight:700;\">\ud83d\udfe1 Sufficient</span>\n   - \ud83d\udd34 Needs Attention = significant gap, exposure, or buried exclusion that could cause material out-of-pocket loss at claim time.\n     Visual: <span style=\"display:inline-block;padding:2px 10px;background:#fde8e8;color:#a51919;border-radius:999px;font-size:0.78rem;font-weight:700;\">\ud83d\udd34 Needs Attention</span>\n\n3. WHAT TO LOOK FOR \u2014 flag these as real Florida property risks\n   - Dwelling coverage vs. rebuild cost. Florida rebuild is $200-$250 per square foot in 2026. Multiply sq footage by $225 (the midpoint) and compare to dwelling limit. If gap is more than 10%, flag \ud83d\udd34.\n   - Hurricane deductible. If 5% or higher, flag \ud83d\udd34 with a real dollar example. If 2%, flag \ud83d\udfe1. If percentage isn't specified, flag \ud83d\udfe1 and suggest the homeowner verify.\n   - Flood. If no flood policy mentioned, flag \ud83d\udd34 \u2014 standard policies don't cover flood. If flood policy exists but contents not included, flag \ud83d\udd34 with explanation.\n   - Sinkhole. In Florida, often excluded unless bought back via endorsement. If excluded, flag \ud83d\udfe1 (worse if property is in a known sinkhole zone but you may not know that).\n   - Mold limit. Often capped at $5K-$10K. If at or below $10K, flag \ud83d\udfe1 with a buy-up suggestion.\n   - Roof age and ACV vs RC. If policy mentions ACV (Actual Cash Value) for roof, flag \ud83d\udd34 \u2014 that's depreciated payout. If RC (Replacement Cost), flag \ud83d\udfe2.\n   - Personal property limit. Should be 50-70% of dwelling. If below 50%, flag \ud83d\udfe1.\n   - Liability. Florida HO policies usually offer $100K-$500K. $300K+ is healthy \ud83d\udfe2. Below $100K is \ud83d\udfe1. Below $50K is \ud83d\udd34.\n   - Loss of Use / Additional Living Expenses. Should be 20-30% of dwelling. If below 20%, flag \ud83d\udfe1.\n   - Wind mitigation. If endorsements mention wind mitigation discount, that's good \ud83d\udfe2. If absent and property is in FL, flag \ud83d\udfe1 with a recommendation to get an inspection.\n   - Ordinance & Law. If absent or below 10% of dwelling, flag \ud83d\udfe1.\n   - Schedule of items (jewelry, art, electronics). Default policies cap individual high-value items at $1,000-$2,500. If no scheduled items endorsement and policy is for a family-residence (not a rental), flag \ud83d\udfe1.\n\n4. WHAT NOT TO DO\n   - Do NOT promise outcomes (\"we will make sure...\", \"you will...\")\n   - Do NOT use legal-advice language (\"you should sue\", \"you have a case\")\n   - Do NOT recommend a specific carrier or broker\n   - Do NOT compare to other lawyers or firms\n   - Do NOT use the words \"specialist\" or \"expert\"\n   - Do NOT include scary stories or fear-based framing \u2014 be direct, factual, helpful\n\n================================================================================\nREQUIRED OUTPUT FORMAT\n================================================================================\n\nOutput ONLY the HTML body of the report. No markdown, no code fences, no preamble. The email template will wrap it with the tenant's branding and compliance footer. Use this exact structure:\n\n<div class=\"kiss-report\" style=\"font-family:'Albert Sans',Arial,sans-serif;color:#1a2236;line-height:1.6;max-width:680px;margin:0 auto;\">\n\n  <div style=\"border-bottom:2px solid #1e5fae;padding-bottom:14px;margin-bottom:20px;\">\n    <div style=\"color:#1e5fae;font-size:0.78rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;\">Your Insurance Policy Review</div>\n    <h2 style=\"font-size:1.4rem;font-weight:700;margin:6px 0 4px;\">Prepared for {{contact_name}}</h2>\n    <div style=\"color:#4a5673;font-size:0.92rem;\">{{property_address}} \u00b7 {{sq_footage}} sq ft \u00b7 built {{year_built}}</div>\n  </div>\n\n  <div style=\"background:#eef1f5;border-radius:10px;padding:16px 18px;margin-bottom:24px;\">\n    <strong style=\"display:block;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:#1e5fae;margin-bottom:6px;\">Executive Summary</strong>\n    [WRITE 2-3 SENTENCES at 5th-grade level. State the headline finding: how many issues need attention, how many need a watch, how many are good. Specific. Real-language. Example: \"Your policy looks mostly OK, but two things need fixing soon and one could be improved at renewal. Specifically: your hurricane deductible is high, you have no flood contents coverage, and your dwelling limit is a little behind today's rebuild costs.\"]\n  </div>\n\n  <h3 style=\"font-size:1.05rem;font-weight:700;margin-bottom:12px;color:#0f1e3d;\">At a glance</h3>\n  <table style=\"width:100%;border-collapse:collapse;font-size:0.92rem;margin-bottom:24px;\">\n    <tr style=\"background:#f7f8fa;font-weight:700;font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:#4a5673;\">\n      <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\">Coverage</td>\n      <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\">Amount</td>\n      <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\">Status</td>\n      <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\">In plain English</td>\n    </tr>\n    [GENERATE A ROW FOR EACH MAJOR COVERAGE LINE \u2014 dwelling, hurricane deductible, flood (if applicable), other deductibles, personal property, liability, loss of use, mold cap, etc. Each row has the coverage name, the amount, the status badge (using the inline span styles defined above), and a 1-sentence plain-English explanation. Use <td style=\"padding:10px;border-bottom:1px solid #e0e5ed;\"> for cells.]\n  </table>\n\n  <h3 style=\"font-size:1.05rem;font-weight:700;margin-bottom:12px;color:#0f1e3d;\">What needs attention</h3>\n\n  [FOR EACH FINDING flagged \ud83d\udd34 or \ud83d\udfe1 above, include a detail block in this format. ORDER THEM \ud83d\udd34 first, \ud83d\udfe1 second.]\n\n  <div style=\"margin-bottom:14px;padding:14px 18px;background:#fde8e8;border-left:4px solid #ef4444;border-radius:0 8px 8px 0;\">\n    <strong style=\"color:#a51919;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;\">\ud83d\udd34 [Plain-English headline of the finding]</strong>\n    <p style=\"margin-top:6px;font-size:0.95rem;\">[2-3 sentences. What it means in real dollars. Concrete example.]</p>\n    <p style=\"margin-top:8px;font-size:0.95rem;\"><strong>What to do:</strong> [Specific, actionable recommendation. Include rough cost impact if you know it.]</p>\n  </div>\n\n  [Use background:#fff5d6 and border-left:#f6c66c for \ud83d\udfe1 findings, and color:#946a00 for the strong tag.]\n\n  <div style=\"margin-top:24px;background:#eef1f5;padding:18px 20px;border-radius:10px;\">\n    <strong style=\"display:block;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:#1e5fae;margin-bottom:10px;\">What to do next</strong>\n    <ol style=\"padding-left:22px;font-size:0.95rem;line-height:1.7;margin:0;\">\n      <li>[Most urgent action \u2014 usually the highest-impact \ud83d\udd34 finding, with one concrete next step]</li>\n      <li>[Before peak season \u2014 what to do before hurricane season or before the next major risk window]</li>\n      <li>[At next renewal \u2014 what to bring up with their agent at renewal time]</li>\n    </ol>\n  </div>\n\n</div>\n\n================================================================================\nLENGTH TARGET\n================================================================================\n\nThe full report should be approximately 800-1,400 words depending on how many findings the policy generates. Simpler policies (everything \ud83d\udfe2) land at 1 page; more complex policies (multiple \ud83d\udd34/\ud83d\udfe1 findings) at 2-3 pages. Cut filler \u2014 every sentence earns its place.\n\n================================================================================\nTONE EXAMPLES (USE THIS VOICE)\n================================================================================\n\nYES: \"Your hurricane deductible is high. Your policy says you'd pay 5% of your dwelling coverage before insurance helps \u2014 that's $21,250 out of pocket. Most Florida homeowners can drop this to 2% (about $8,500) for a small premium increase.\"\n\nNO: \"The hurricane deductible provision in your policy reflects an elevated percentage that may result in significant policyholder financial exposure at the time of a covered windstorm event.\"\n\nYES: \"You don't have flood insurance for your stuff \u2014 only the building. So if a flood damages your furniture, electronics, and clothes, your current flood policy won't pay for any of it.\"\n\nNO: \"The flood policy as currently written excludes contents coverage, which would result in uninsured losses for personal property in the event of a flood loss.\"\n\n================================================================================\nEND OF PROMPT\n================================================================================\n\n================================================================================\nDRIVER / HOMEOWNER DETAILS\n================================================================================\nName: {{2.contact_name}}\nAddress: {{2.property_address}}\nSquare Footage: {{2.sq_footage}}\nYear Built: {{2.year_built}}\nPolicy Type: {{2.policy_type}}\n\n================================================================================\nEXTRACTED POLICY DATA (JSON)\n================================================================================\n{{7}}\n"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2400,
+                  "y": 200
+                },
+                "label": "Generate consumer report (Residential)"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "filter": null,
+      "metadata": {
+        "designer": {
+          "x": 2400,
+          "y": 0
+        },
+        "label": "Branch by persona"
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 10,
+              "filter": {
+                "name": "Broker tenant",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{2.tenants.persona}}",
+                      "b": "broker",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              },
+              "module": "openai-gpt-3:createModelResponse",
+              "version": 1,
+              "parameters": {
+                "__IMTCONN__": 6008119
+              },
+              "mapper": {
+                "model": "gpt-4o",
+                "temperature": 0.2,
+                "input": "You are a senior insurance broker consultant. Generate a 5-section advisory report.\n\nProperty: {{2.property_address}}, {{2.sq_footage}} sq ft, built {{2.year_built}}\nBroker: {{2.tenants.brand_name}}\n\nSECTION 1 - POLICY SNAPSHOT\nSECTION 2 - COVERAGE ADEQUACY (use FL rebuild cost $200-250/sq ft)\nSECTION 3 - SAVINGS OPPORTUNITIES\nSECTION 4 - COVERAGE GAPS\nSECTION 5 - TALKING POINTS FOR {{2.tenants.brand_name}}\n\nExtracted policy data:\n{{7}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2700,
+                  "y": -300
+                },
+                "label": "Generate broker report"
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "filter": {
+                "name": "Attorney tenant",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{2.tenants.persona}}",
+                      "b": "attorney",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              },
+              "module": "openai-gpt-3:createModelResponse",
+              "version": 1,
+              "parameters": {
+                "__IMTCONN__": 6008119
+              },
+              "mapper": {
+                "model": "gpt-4o",
+                "temperature": 0.2,
+                "input": "You are a property damage attorney reviewing a policy pre-claim. Generate a 5-section report.\n\nProperty: {{2.property_address}}, {{2.sq_footage}} sq ft, built {{2.year_built}}\nAttorney: {{2.tenants.brand_name}}\n\nSECTION 1 - POLICY OVERVIEW\nSECTION 2 - CLAIM RISK ANALYSIS (HIGH/MEDIUM/LOW)\nSECTION 3 - FLORIDA-SPECIFIC CONCERNS\nSECTION 4 - DOCUMENT NOW\nSECTION 5 - TALKING POINTS FOR {{2.tenants.brand_name}}\n\nEnd with legal disclaimer.\n\nExtracted policy data:\n{{7}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2700,
+                  "y": 300
+                },
+                "label": "Generate attorney report"
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 12,
+              "filter": {
+                "name": "Consumer tenant",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{2.tenants.persona}}",
+                      "b": "consumer",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              },
+              "module": "util:SetVariables",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "scope": "roundtrip",
+                "variables": [
+                  {
+                    "name": "skip_partner_report",
+                    "value": "true"
+                  }
+                ]
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2700,
+                  "y": 0
+                },
+                "label": "Skip partner report"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth"
+      },
+      "mapper": {
+        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/reports",
+        "method": "post",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Prefer",
+            "value": "return=minimal"
+          }
+        ],
+        "rawContent": "[{\"submission_id\":\"{{1.submission_id}}\",\"tenant_id\":\"{{2.tenant_id}}\",\"report_type\":\"consumer\",\"extracted_json\":{{7}},\"report_body\":{{ifempty(17.output[].content[].text;18.output[].content[].text)}}},{\"submission_id\":\"{{1.submission_id}}\",\"tenant_id\":\"{{2.tenant_id}}\",\"report_type\":\"{{2.tenants.persona}}\",\"extracted_json\":{{7}},\"report_body\":{{ifempty(10.output[].content[].text;ifempty(11.output[].content[].text;\"\"))}}}]",
+        "contentType": "raw"
+      },
+      "metadata": {
+        "designer": {
+          "x": 3000,
+          "y": 0
+        },
+        "label": "Save reports to Supabase"
+      }
+    },
+    {
+      "id": 14,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth"
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "rawContent": "{\"from\":\"KISS Policy Review <reports@kiss.optimizinggroup.com>\",\"to\":[\"{{2.contact_email}}\"],\"subject\":\"Your KISS Policy Review Is Ready\",\"html\":\"<see email_homeowner.html template \u2014 substitute {{2.contact_name}}, {{2.tenants.brand_name}}, {{2.tenants.brand_color}}, {{ifempty(17.output[].content[].text;18.output[].content[].text)}}>\"}",
+        "contentType": "raw"
+      },
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": -200
+        },
+        "label": "Email homeowner (consumer report)"
+      }
+    },
+    {
+      "id": 15,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth"
+      },
+      "mapper": {
+        "url": "https://api.resend.com/emails",
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "rawContent": "{\"from\":\"KISS Policy Review <reports@kiss.optimizinggroup.com>\",\"to\":[\"{{2.tenants.contact_email}}\"],\"cc\":[\"{{2.contact_email}}\"],\"subject\":\"New KISS Policy Review \u2014 {{2.contact_name}}\",\"html\":\"<see email_partner.html template \u2014 both reports embedded, branded with tenants.brand_color>\"}",
+        "contentType": "raw"
+      },
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": 200
+        },
+        "label": "Email partner (only if persona != consumer)"
+      },
+      "filter": {
+        "name": "Only for partner tenants",
+        "conditions": [
+          [
+            {
+              "a": "{{2.tenants.persona}}",
+              "b": "consumer",
+              "o": "text:notequal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth"
+      },
+      "mapper": {
+        "url": "https://https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}",
+        "method": "patch",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "rawContent": "{\"status\":\"completed\",\"processing_completed_at\":\"{{now}}\",\"policy_effective_date\":{{if(7.policy_effective_date; \"\\\"\" + 7.policy_effective_date + \"\\\"\"; \"null\")}},\"policy_expiration_date\":{{if(7.policy_expiration_date; \"\\\"\" + 7.policy_expiration_date + \"\\\"\"; \"null\")}}}",
+        "contentType": "raw"
+      },
+      "metadata": {
+        "designer": {
+          "x": 3600,
+          "y": 0
+        },
+        "label": "Mark completed"
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": true,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  },
+  "_SETUP_CHECKLIST": [
+    "1. In Supabase: run supabase_schema.sql",
+    "2. In Supabase: create storage bucket 'policies' (private, 25MB limit, application/pdf only)",
+    "3. In Supabase: copy Project URL and service_role key from Settings \u2192 API",
+    "4. In Resend: add and verify kiss.optimizinggroup.com domain (DKIM + SPF + DMARC records)",
+    "5. In PDF.co (or alternative): create account, copy API key",
+    "6. In Make: import this blueprint, replace https://diyctwdqmqwemswekyvb.supabase.co / sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL / re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98 / _IGUE3YoqTZvkmwk4DdJvN7xrpXBGETHntqWNH5Aeo2GD7LxdCtbU2lYRFMpo0edi",
+    "7. In Make: copy webhook URL from module 1 \u2014 set as VITE_MAKE_WEBHOOK_URL in the React frontend env",
+    "8. Pause v1 scenario (id 4581471) but do not delete \u2014 keep for rollback",
+    "9. Test end-to-end with seeded 'consumer' tenant before live partner onboarding",
+    "v2.2 changes: extraction prompt now outputs ISO 8601 dates; module 8 is now a policy-class router (Auto vs Residential); module 16 PATCH writes policy_effective_date + policy_expiration_date to enable the daily renewal-reminder scenario. After import, MANUALLY verify the two new GPT modules (id 17 Auto, id 18 Residential) have the OpenAI connection set to IMTCONN 6008119 \u2014 Make sometimes drops connection references on blueprint import."
+  ]
+}
