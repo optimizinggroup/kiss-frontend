@@ -121,6 +121,8 @@ The frontend will work with both OpenAI and Claude versions — it just fires th
 
 ---
 
+<!-- Test deployment trigger - Phase C Vercel deployment verification -->
+
 **Total time to live**: ~30 minutes (mostly DNS propagation waiting)
 
 For detailed Vercel troubleshooting, see `VERCEL_DEPLOYMENT.md`.
