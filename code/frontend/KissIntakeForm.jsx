@@ -92,6 +92,9 @@ export default function KissIntakeForm({ slug }) {
       "HO-6 (condo)",
       "HO-8 (older home)",
       "DP-3 (rental property)",
+      "NFIP Flood Insurance (Dwelling Form)",
+      "NFIP Flood Insurance (General Property)",
+      "Private Flood Insurance",
       "Not sure — homeowners"
     ],
     auto: [
