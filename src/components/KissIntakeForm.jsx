@@ -40,7 +40,7 @@ export default function KissIntakeForm({ slug }) {
     (async () => {
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, slug, persona, brand_name, brand_logo_url, brand_color, status")
+        .select("id, slug, persona, brand_name, brand_logo_url, brand_color, partner_tagline, partner_photo_url, partner_bio, status")
         .eq("slug", slug)
         .eq("status", "active")
         .single();
@@ -58,7 +58,7 @@ export default function KissIntakeForm({ slug }) {
     if (!code) return null;
     const { data } = await supabase
       .from("tenants")
-      .select("id, slug, persona, brand_name, brand_logo_url, brand_color, status")
+      .select("id, slug, persona, brand_name, brand_logo_url, brand_color, partner_tagline, partner_photo_url, partner_bio, status")
       .eq("partner_code", code.toUpperCase())
       .eq("status", "active")
       .single();
@@ -161,6 +161,9 @@ export default function KissIntakeForm({ slug }) {
 
   const accent = tenant?.brand_color || "#27AE60";
   const partnerName = tenant?.brand_name || "KISS Policy Review";
+  // White-label mode = tenant has at least one partner display field populated.
+  // Renders the partner-branded block above a "KISS Policy Review" sub-header.
+  const isWhiteLabel = !!(tenant && (tenant.partner_tagline || tenant.partner_photo_url || tenant.partner_bio || tenant.brand_logo_url));
 
   if (submitSuccess) {
     return (
@@ -186,17 +189,56 @@ export default function KissIntakeForm({ slug }) {
   return (
     <div style={styles.wrap}>
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
-        {tenant?.brand_logo_url && (
-          <img src={tenant.brand_logo_url} alt={partnerName} style={{ maxHeight: 56, marginBottom: 12 }} />
-        )}
-        <h1 style={{ ...styles.h1, color: accent }}>{partnerName}</h1>
-        <p style={styles.lead}>Free Insurance Policy Review</p>
-        <p style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
-          Upload your homeowner's insurance policy. We'll send you a plain-English review of your coverage,
-          gaps, and savings opportunities — usually within 10 minutes.
-        </p>
-      </div>
+      {isWhiteLabel ? (
+        <div style={{ marginBottom: 28 }}>
+          {/* Partner block (top) */}
+          <div style={{ textAlign: "center", padding: "8px 0 20px" }}>
+            {tenant.brand_logo_url && (
+              <img src={tenant.brand_logo_url} alt={partnerName} style={{ maxHeight: 72, marginBottom: 14 }} />
+            )}
+            <h1 style={{ ...styles.h1, color: accent, fontSize: 30 }}>{partnerName}</h1>
+            {tenant.partner_tagline && (
+              <p style={{ fontSize: 14, color: "#555", fontWeight: 600, margin: "6px 0 0", letterSpacing: 0.2 }}>
+                {tenant.partner_tagline}
+              </p>
+            )}
+            {(tenant.partner_photo_url || tenant.partner_bio) && (
+              <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 18, padding: "14px 16px", background: "#F8F9FA", border: "1px solid #E5E5E5", borderRadius: 10, textAlign: "left" }}>
+                {tenant.partner_photo_url && (
+                  <img src={tenant.partner_photo_url} alt="" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: `2px solid ${accent}` }} />
+                )}
+                {tenant.partner_bio && (
+                  <p style={{ fontSize: 13, color: "#444", margin: 0, lineHeight: 1.5 }}>{tenant.partner_bio}</p>
+                )}
+              </div>
+            )}
+          </div>
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 18px" }}>
+            <div style={{ flex: 1, height: 1, background: "#E0E0E0" }} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#888", letterSpacing: 1.5 }}>POWERED BY</span>
+            <div style={{ flex: 1, height: 1, background: "#E0E0E0" }} />
+          </div>
+          {/* KISS sub-header */}
+          <div style={{ textAlign: "center" }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px", color: "#222" }}>KISS Policy Review</h2>
+            <p style={styles.lead}>Free Insurance Policy Review</p>
+            <p style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
+              Upload your homeowner's insurance policy. You'll receive a plain-English review of your coverage,
+              gaps, and savings opportunities — usually within 10 minutes.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <h1 style={{ ...styles.h1, color: accent }}>{partnerName}</h1>
+          <p style={styles.lead}>Free Insurance Policy Review</p>
+          <p style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
+            Upload your homeowner's insurance policy. We'll send you a plain-English review of your coverage,
+            gaps, and savings opportunities — usually within 10 minutes.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         {/* Partner code only on generic form */}
