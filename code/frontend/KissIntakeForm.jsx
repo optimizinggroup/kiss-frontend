@@ -23,10 +23,11 @@ export default function KissIntakeForm({ slug }) {
     contact_name: "",
     contact_email: "",
     contact_phone: "",
-    property_address: "",
+    policy_category: "",          // homeowners | auto | commercial — chosen first
+    policy_type: "",              // sub-type within category
+    property_address: "",         // doubles as vehicle description for auto
     sq_footage: "",
     year_built: "",
-    policy_type: "HO-3 (standard homeowners)",
     pdf_file: null,
     consent: false
   });
@@ -67,10 +68,44 @@ export default function KissIntakeForm({ slug }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-    setForm(f => ({
-      ...f,
-      [name]: type === "checkbox" ? checked : type === "file" ? files[0] : value
-    }));
+    setForm(f => {
+      const next = {
+        ...f,
+        [name]: type === "checkbox" ? checked : type === "file" ? files[0] : value
+      };
+      // When category changes, reset the dependent fields
+      if (name === "policy_category") {
+        next.policy_type = "";
+        next.property_address = "";
+        next.sq_footage = "";
+        next.year_built = "";
+      }
+      return next;
+    });
+  };
+
+  // Policy type options grouped by category
+  const POLICY_TYPES_BY_CATEGORY = {
+    homeowners: [
+      "HO-3 (standard homeowners)",
+      "HO-5 (premium homeowners)",
+      "HO-6 (condo)",
+      "HO-8 (older home)",
+      "DP-3 (rental property)",
+      "Not sure — homeowners"
+    ],
+    auto: [
+      "Personal Auto Policy (PAP)",
+      "Motorcycle Policy",
+      "Commercial Auto",
+      "Not sure — auto"
+    ],
+    commercial: [
+      "BOP (Business Owner Policy)",
+      "Commercial Property",
+      "General Liability (CGL)",
+      "Not sure — commercial"
+    ]
   };
 
   const handleSubmit = async (e) => {
@@ -230,8 +265,8 @@ export default function KissIntakeForm({ slug }) {
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px", color: "#222" }}>KISS Policy Review</h2>
             <p style={styles.lead}>Free Insurance Policy Review</p>
             <p style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
-              Upload your homeowner's insurance policy. You'll receive a plain-English review of your coverage,
-              gaps, and savings opportunities — usually within 10 minutes.
+              Upload your insurance policy — homeowners, auto, or commercial. You'll receive a plain-English
+              review of your coverage, gaps, and savings opportunities — usually within 10 minutes.
             </p>
           </div>
         </div>
@@ -240,8 +275,8 @@ export default function KissIntakeForm({ slug }) {
           <h1 style={{ ...styles.h1, color: accent }}>{partnerName}</h1>
           <p style={styles.lead}>Free Insurance Policy Review</p>
           <p style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
-            Upload your homeowner's insurance policy. We'll send you a plain-English review of your coverage,
-            gaps, and savings opportunities — usually within 10 minutes.
+            Upload your insurance policy — homeowners, auto, or commercial. We'll send you a plain-English
+            review of your coverage, gaps, and savings opportunities — usually within 10 minutes.
           </p>
         </div>
       )}
@@ -273,38 +308,60 @@ export default function KissIntakeForm({ slug }) {
           <input type="tel" name="contact_phone" value={form.contact_phone} onChange={handleChange} style={styles.input} />
         </Field>
 
-        <Field label="Policy type" required>
-          <select name="policy_type" value={form.policy_type} onChange={handleChange} style={styles.input}>
-            <optgroup label="Homeowners / Property">
-              <option>HO-3 (standard homeowners)</option>
-              <option>HO-5 (premium homeowners)</option>
-              <option>HO-6 (condo)</option>
-              <option>HO-8 (older home)</option>
-              <option>DP-3 (rental property)</option>
-            </optgroup>
-            <optgroup label="Auto / Vehicle">
-              <option>Personal Auto Policy (PAP)</option>
-              <option>Motorcycle Policy</option>
-              <option>Commercial Auto</option>
-            </optgroup>
-            <optgroup label="Commercial Property / Business">
-              <option>BOP (Business Owner Policy)</option>
-              <option>Commercial Property</option>
-              <option>General Liability (CGL)</option>
-            </optgroup>
-            <option>Other / Not sure</option>
-          </select>
+        {/* Step 1 — qualifying question */}
+        <Field label="What type of policy do you want us to review today?" required>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            {[
+              { value: "homeowners", label: "Homeowners", emoji: "🏠" },
+              { value: "auto",       label: "Automobile", emoji: "🚗" },
+              { value: "commercial", label: "Commercial", emoji: "🏢" }
+            ].map(opt => {
+              const active = form.policy_category === opt.value;
+              return (
+                <label
+                  key={opt.value}
+                  style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                    padding: "14px 10px",
+                    border: `2px solid ${active ? accent : "#DDD"}`,
+                    background: active ? `${accent}10` : "#FFF",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                    fontWeight: active ? 700 : 500,
+                    fontSize: 14
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="policy_category"
+                    value={opt.value}
+                    checked={active}
+                    onChange={handleChange}
+                    style={{ position: "absolute", opacity: 0, width: 1, height: 1 }}
+                  />
+                  <span style={{ fontSize: 24 }}>{opt.emoji}</span>
+                  <span>{opt.label}</span>
+                </label>
+              );
+            })}
+          </div>
         </Field>
 
-        {(() => {
-          const isAuto = /Auto|Motorcycle/i.test(form.policy_type);
-          const isCommercial = /BOP|Commercial Property|General Liability/i.test(form.policy_type);
-          return (
-            <>
-              <Field
-                label={isAuto ? "Vehicle (year / make / model)" : isCommercial ? "Business address" : "Property address"}
-                required
-              >
+        {/* Step 2 — category-specific fields */}
+        {form.policy_category && (
+          <>
+            <Field label="Policy type" required>
+              <select name="policy_type" required value={form.policy_type} onChange={handleChange} style={styles.input}>
+                <option value="" disabled>Select your policy type…</option>
+                {POLICY_TYPES_BY_CATEGORY[form.policy_category].map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </Field>
+
+            {form.policy_category === "auto" ? (
+              <Field label="Vehicle (year / make / model)" required hint="Example: 2019 Toyota Camry SE">
                 <input
                   type="text"
                   name="property_address"
@@ -312,23 +369,34 @@ export default function KissIntakeForm({ slug }) {
                   value={form.property_address}
                   onChange={handleChange}
                   style={styles.input}
-                  placeholder={isAuto ? "2019 Toyota Camry SE" : "123 Main St, Miami, FL 33101"}
+                  placeholder="2019 Toyota Camry SE"
                 />
               </Field>
-
-              {!isAuto && (
+            ) : (
+              <>
+                <Field label={form.policy_category === "commercial" ? "Business address" : "Property address"} required>
+                  <input
+                    type="text"
+                    name="property_address"
+                    required
+                    value={form.property_address}
+                    onChange={handleChange}
+                    style={styles.input}
+                    placeholder="123 Main St, Miami, FL 33101"
+                  />
+                </Field>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <Field label={isCommercial ? "Square footage (optional)" : "Square footage"}>
+                  <Field label={form.policy_category === "commercial" ? "Square footage (optional)" : "Square footage"}>
                     <input type="number" name="sq_footage" value={form.sq_footage} onChange={handleChange} style={styles.input} placeholder="2400" />
                   </Field>
-                  <Field label={isCommercial ? "Year built (optional)" : "Year built"}>
+                  <Field label={form.policy_category === "commercial" ? "Year built (optional)" : "Year built"}>
                     <input type="number" name="year_built" value={form.year_built} onChange={handleChange} style={styles.input} placeholder="1998" />
                   </Field>
                 </div>
-              )}
-            </>
-          );
-        })()}
+              </>
+            )}
+          </>
+        )}
 
         <Field label="Your policy PDF" required hint="Maximum 25 MB. Accepted: PDF only.">
           <input type="file" name="pdf_file" accept="application/pdf" required onChange={handleChange} style={styles.input} />
