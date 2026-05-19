@@ -25,7 +25,11 @@ export default function KissIntakeForm({ slug }) {
     contact_phone: "",
     policy_category: "",          // homeowners | auto | commercial — chosen first
     policy_type: "",              // sub-type within category
-    property_address: "",         // doubles as vehicle description for auto
+    property_address: "",         // street address, OR vehicle (year/make/model) for auto
+    property_city: "",
+    property_state: "FL",         // default; user can change
+    property_zip: "",
+    property_county: "",          // auto-derived from ZIP via FCC API; user can override
     sq_footage: "",
     year_built: "",
     pdf_file: null,
@@ -64,6 +68,44 @@ export default function KissIntakeForm({ slug }) {
       .eq("status", "active")
       .single();
     return data || null;
+  };
+
+  // ZIP → city / state / county auto-lookup.
+  // Chains two free, no-auth APIs:
+  //   1. zippopotam.us → city, state, lat/lng
+  //   2. geo.fcc.gov   → county from lat/lng
+  // Failures are silent — user can still type values manually.
+  const lookupZip = async (zip) => {
+    const clean = String(zip || "").trim();
+    if (!/^\d{5}$/.test(clean)) return;
+    try {
+      const zipResp = await fetch(`https://api.zippopotam.us/us/${clean}`);
+      if (!zipResp.ok) return;
+      const zipData = await zipResp.json();
+      const place = zipData?.places?.[0];
+      if (!place) return;
+      const city  = place["place name"];
+      const state = place["state abbreviation"];
+      const lat   = parseFloat(place["latitude"]);
+      const lon   = parseFloat(place["longitude"]);
+
+      let county = "";
+      try {
+        const fccResp = await fetch(`https://geo.fcc.gov/api/census/area?lat=${lat}&lon=${lon}&format=json`);
+        if (fccResp.ok) {
+          const fccData = await fccResp.json();
+          county = fccData?.results?.[0]?.county_name || "";
+        }
+      } catch (_) { /* swallow — county is optional */ }
+
+      // Only fill empty fields so user edits aren't clobbered
+      setForm(f => ({
+        ...f,
+        property_city:   f.property_city   || city,
+        property_state:  f.property_state  || state,
+        property_county: f.property_county || county
+      }));
+    } catch (_) { /* swallow — leave fields blank for user to type */ }
   };
 
   const handleChange = (e) => {
@@ -166,6 +208,10 @@ export default function KissIntakeForm({ slug }) {
           contact_email: form.contact_email,
           contact_phone: form.contact_phone || null,
           property_address: form.property_address,
+          property_city:    form.property_city    || null,
+          property_state:   form.property_state   || null,
+          property_zip:     form.property_zip     || null,
+          property_county:  form.property_county  || null,
           sq_footage: form.sq_footage ? parseInt(form.sq_footage) : null,
           year_built: form.year_built ? parseInt(form.year_built) : null,
           policy_type: form.policy_type,
@@ -377,7 +423,7 @@ export default function KissIntakeForm({ slug }) {
               </Field>
             ) : (
               <>
-                <Field label={form.policy_category === "commercial" ? "Business address" : "Property address"} required>
+                <Field label={form.policy_category === "commercial" ? "Street address" : "Street address"} required>
                   <input
                     type="text"
                     name="property_address"
@@ -385,9 +431,61 @@ export default function KissIntakeForm({ slug }) {
                     value={form.property_address}
                     onChange={handleChange}
                     style={styles.input}
-                    placeholder="123 Main St, Miami, FL 33101"
+                    placeholder="123 Main St"
                   />
                 </Field>
+
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 12 }}>
+                  <Field label="City" required>
+                    <input
+                      type="text"
+                      name="property_city"
+                      required
+                      value={form.property_city}
+                      onChange={handleChange}
+                      style={styles.input}
+                      placeholder="Miami"
+                    />
+                  </Field>
+                  <Field label="State" required>
+                    <input
+                      type="text"
+                      name="property_state"
+                      required
+                      maxLength={2}
+                      value={form.property_state}
+                      onChange={(e) => handleChange({ target: { name: "property_state", value: e.target.value.toUpperCase() } })}
+                      style={styles.input}
+                      placeholder="FL"
+                    />
+                  </Field>
+                  <Field label="ZIP" required hint="Auto-fills city/county">
+                    <input
+                      type="text"
+                      name="property_zip"
+                      required
+                      inputMode="numeric"
+                      maxLength={5}
+                      value={form.property_zip}
+                      onChange={handleChange}
+                      onBlur={(e) => lookupZip(e.target.value)}
+                      style={styles.input}
+                      placeholder="33101"
+                    />
+                  </Field>
+                </div>
+
+                <Field label="County" hint="Auto-derived from ZIP — edit if wrong">
+                  <input
+                    type="text"
+                    name="property_county"
+                    value={form.property_county}
+                    onChange={handleChange}
+                    style={styles.input}
+                    placeholder="Miami-Dade County"
+                  />
+                </Field>
+
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <Field label={form.policy_category === "commercial" ? "Square footage (optional)" : "Square footage"}>
                     <input type="number" name="sq_footage" value={form.sq_footage} onChange={handleChange} style={styles.input} placeholder="2400" />
