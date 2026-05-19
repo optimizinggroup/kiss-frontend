@@ -26,7 +26,7 @@ export default function KissIntakeForm({ slug }) {
     property_address: "",
     sq_footage: "",
     year_built: "",
-    policy_type: "HO-3",
+    policy_type: "HO-3 (standard homeowners)",
     pdf_file: null,
     consent: false
   });
@@ -98,10 +98,30 @@ export default function KissIntakeForm({ slug }) {
       if (form.pdf_file.type !== "application/pdf") throw new Error("File must be a PDF.");
       if (form.pdf_file.size > 25 * 1024 * 1024) throw new Error("PDF must be under 25 MB.");
 
-      // 3. Create submission row first (so we have an ID for the storage path)
-      const { data: submission, error: subError } = await supabase
+      // 3. Generate client-side UUID for the submission. We don't read it back
+      //    from Supabase (anon has no SELECT on submissions), so we control the
+      //    primary key ourselves and use Prefer: return=minimal on INSERT.
+      const submissionId = (typeof crypto !== "undefined" && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+          });
+      const path = `policies/${activeTenant.id}/${submissionId}.pdf`;
+
+      // 4. Upload PDF first (storage doesn't depend on submission row existing)
+      const { error: uploadError } = await supabase.storage
+        .from("policies")
+        .upload(path, form.pdf_file, { contentType: "application/pdf", upsert: false });
+      if (uploadError) throw uploadError;
+
+      // 5. Insert submission row with our client-generated id + real pdf path.
+      //    return=minimal so PostgREST doesn't try to RETURN the row (which
+      //    would require a SELECT policy anon doesn't have).
+      const { error: subError } = await supabase
         .from("submissions")
         .insert({
+          id: submissionId,
           tenant_id: activeTenant.id,
           intake_source: slug ? "branded_form" : "generic_form",
           contact_name: form.contact_name,
@@ -111,32 +131,18 @@ export default function KissIntakeForm({ slug }) {
           sq_footage: form.sq_footage ? parseInt(form.sq_footage) : null,
           year_built: form.year_built ? parseInt(form.year_built) : null,
           policy_type: form.policy_type,
-          pdf_storage_path: "pending", // updated after upload
+          pdf_storage_path: path,
           consent_to_review: form.consent,
           consent_timestamp: form.consent ? new Date().toISOString() : null,
           status: "pending"
-        })
-        .select()
-        .single();
+        }, { returning: "minimal" });
       if (subError) throw subError;
-
-      // 4. Upload PDF
-      const path = `policies/${activeTenant.id}/${submission.id}.pdf`;
-      const { error: uploadError } = await supabase.storage
-        .from("policies")
-        .upload(path, form.pdf_file, { contentType: "application/pdf", upsert: false });
-      if (uploadError) throw uploadError;
-
-      // 5. Update submission with the real storage path
-      await supabase.from("submissions")
-        .update({ pdf_storage_path: path })
-        .eq("id", submission.id);
 
       // 6. Fire Make webhook (Make signs the URL and processes)
       const webhookResp = await fetch(MAKE_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submission_id: submission.id })
+        body: JSON.stringify({ submission_id: submissionId })
       });
       if (!webhookResp.ok) {
         // Submission is in DB; Make can be retried manually. Don't block user.
@@ -267,29 +273,62 @@ export default function KissIntakeForm({ slug }) {
           <input type="tel" name="contact_phone" value={form.contact_phone} onChange={handleChange} style={styles.input} />
         </Field>
 
-        <Field label="Property address" required>
-          <input type="text" name="property_address" required value={form.property_address} onChange={handleChange} style={styles.input} placeholder="123 Main St, Miami, FL 33101" />
-        </Field>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Square footage">
-            <input type="number" name="sq_footage" value={form.sq_footage} onChange={handleChange} style={styles.input} placeholder="2400" />
-          </Field>
-          <Field label="Year built">
-            <input type="number" name="year_built" value={form.year_built} onChange={handleChange} style={styles.input} placeholder="1998" />
-          </Field>
-        </div>
-
-        <Field label="Policy type">
+        <Field label="Policy type" required>
           <select name="policy_type" value={form.policy_type} onChange={handleChange} style={styles.input}>
-            <option>HO-3 (most common)</option>
-            <option>HO-5</option>
-            <option>HO-6 (condo)</option>
-            <option>HO-8</option>
-            <option>DP-3 (rental property)</option>
-            <option>Not sure</option>
+            <optgroup label="Homeowners / Property">
+              <option>HO-3 (standard homeowners)</option>
+              <option>HO-5 (premium homeowners)</option>
+              <option>HO-6 (condo)</option>
+              <option>HO-8 (older home)</option>
+              <option>DP-3 (rental property)</option>
+            </optgroup>
+            <optgroup label="Auto / Vehicle">
+              <option>Personal Auto Policy (PAP)</option>
+              <option>Motorcycle Policy</option>
+              <option>Commercial Auto</option>
+            </optgroup>
+            <optgroup label="Commercial Property / Business">
+              <option>BOP (Business Owner Policy)</option>
+              <option>Commercial Property</option>
+              <option>General Liability (CGL)</option>
+            </optgroup>
+            <option>Other / Not sure</option>
           </select>
         </Field>
+
+        {(() => {
+          const isAuto = /Auto|Motorcycle/i.test(form.policy_type);
+          const isCommercial = /BOP|Commercial Property|General Liability/i.test(form.policy_type);
+          return (
+            <>
+              <Field
+                label={isAuto ? "Vehicle (year / make / model)" : isCommercial ? "Business address" : "Property address"}
+                required
+              >
+                <input
+                  type="text"
+                  name="property_address"
+                  required
+                  value={form.property_address}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder={isAuto ? "2019 Toyota Camry SE" : "123 Main St, Miami, FL 33101"}
+                />
+              </Field>
+
+              {!isAuto && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <Field label={isCommercial ? "Square footage (optional)" : "Square footage"}>
+                    <input type="number" name="sq_footage" value={form.sq_footage} onChange={handleChange} style={styles.input} placeholder="2400" />
+                  </Field>
+                  <Field label={isCommercial ? "Year built (optional)" : "Year built"}>
+                    <input type="number" name="year_built" value={form.year_built} onChange={handleChange} style={styles.input} placeholder="1998" />
+                  </Field>
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         <Field label="Your policy PDF" required hint="Maximum 25 MB. Accepted: PDF only.">
           <input type="file" name="pdf_file" accept="application/pdf" required onChange={handleChange} style={styles.input} />
