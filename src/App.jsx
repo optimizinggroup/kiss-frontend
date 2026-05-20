@@ -1,12 +1,8 @@
-import { useParams } from 'react-router-dom'
-import KissIntakeForm from './components/KissIntakeForm'
+// Routes are wired in main.jsx — this file is kept only so any
+// existing imports of `./App` don't break. The actual route components
+// are KissStep1Lead and KissStep2Upload.
+import KissStep1Lead from './components/KissStep1Lead'
 
 export default function App() {
-  const { slug } = useParams()
-
-  return (
-    <div>
-      <KissIntakeForm slug={slug} />
-    </div>
-  )
+  return <KissStep1Lead />
 }
