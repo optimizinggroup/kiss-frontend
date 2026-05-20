@@ -31,7 +31,7 @@ export default function KissStep2Upload() {
   useEffect(() => {
     (async () => {
       try {
-        // Try sessionStorage first (came from Step 1)
+        // Try sessionStorage first (came from Step 1 in same browser session)
         const stash = sessionStorage.getItem(`kiss-lead-${submissionId}`);
         if (stash) {
           const parsed = JSON.parse(stash);
@@ -41,8 +41,10 @@ export default function KissStep2Upload() {
           return;
         }
 
-        // Fallback: came from email link in a different session.
-        // Look up tenant by slug + try to find the submission row.
+        // Fallback: user came from the welcome email in a fresh browser.
+        // RLS policy "anon resume lead capture by id (30 day window)"
+        // permits reading status='lead_captured' submissions for 30 days
+        // after creation, so we can rehydrate the lead context here.
         const { data: tenantData } = await supabase
           .from("tenants")
           .select("id, slug, persona, brand_name, brand_logo_url, brand_color, partner_tagline, partner_photo_url, partner_bio, contact_email, status")
@@ -56,21 +58,50 @@ export default function KissStep2Upload() {
         }
         setTenant(tenantData);
 
-        // We can't read submissions via anon (RLS). So we reconstruct enough
-        // context from URL + tenant. Email link is single-purpose: upload PDF.
+        const { data: submission, error: subError } = await supabase
+          .from("submissions")
+          .select("id, contact_name, contact_email, contact_phone, property_address, property_city, property_state, property_zip, property_county, sq_footage, year_built, policy_type, status, created_at")
+          .eq("id", submissionId)
+          .single();
+
+        if (subError || !submission) {
+          setLoadError("This upload link is no longer valid. It may have expired (links last 30 days) or already been used. Please start over with a new review.");
+          setLoading(false);
+          return;
+        }
+        if (submission.status === "completed") {
+          setLoadError("This review has already been completed. Check your email for the report.");
+          setLoading(false);
+          return;
+        }
+        if (submission.status === "processing") {
+          setLoadError("This policy is already being reviewed. You'll receive your report at " + submission.contact_email + " in the next few minutes.");
+          setLoading(false);
+          return;
+        }
+
         setLeadContext({
-          submission_id: submissionId,
+          submission_id: submission.id,
           tenant_id: tenantData.id,
           tenant_slug: tenantData.slug,
           tenant_persona: tenantData.persona,
           tenant_brand_name: tenantData.brand_name,
           tenant_contact_email: tenantData.contact_email,
-          // The rest will be filled from the existing submission row by
-          // the Make scenario (it has service-role access).
+          contact_name: submission.contact_name,
+          contact_email: submission.contact_email,
+          contact_phone: submission.contact_phone || "",
+          property_address: submission.property_address,
+          property_city: submission.property_city || "",
+          property_state: submission.property_state || "",
+          property_zip: submission.property_zip || "",
+          property_county: submission.property_county || "",
+          sq_footage: submission.sq_footage || 0,
+          year_built: submission.year_built || 0,
+          policy_type: submission.policy_type,
         });
         setLoading(false);
       } catch (err) {
-        setLoadError("Could not load your review. Please contact " + (tenant?.brand_name || "the firm") + ".");
+        setLoadError("Could not load your review. Please start over by visiting /" + slug + " or contact your agent.");
         setLoading(false);
       }
     })();
@@ -86,11 +117,15 @@ export default function KissStep2Upload() {
       if (pdfFile.type !== "application/pdf") throw new Error("File must be a PDF.");
       if (pdfFile.size > 25 * 1024 * 1024) throw new Error("PDF must be under 25 MB.");
 
-      // Upload PDF to storage
-      const path = `policies/${tenant.id}/${submissionId}.pdf`;
+      // Upload PDF to storage. upsert: false because anon doesn't have
+      // SELECT permission on storage.objects (which upsert needs to check
+      // existing files). The submission UUID is unique per lead so this is
+      // a fresh insert. Including a millisecond suffix lets the same lead
+      // re-upload if the first attempt errored.
+      const path = `policies/${tenant.id}/${submissionId}-${Date.now()}.pdf`;
       const { error: uploadError } = await supabase.storage
         .from("policies")
-        .upload(path, pdfFile, { contentType: "application/pdf", upsert: true });
+        .upload(path, pdfFile, { contentType: "application/pdf", upsert: false });
       if (uploadError) throw uploadError;
 
       // Fire Policy Review webhook with full payload
