@@ -2,6 +2,8 @@
 
 **Read this first** in any new session before doing KISS work. It's the fastest orientation.
 
+> ⚠️ **CANONICAL BLUEPRINT:** the ONE live Make scenario is `code/make/blueprint_v2_MASTER.json` (Claude 3.5 Sonnet). Its report prompts are **inline** in the modules — the `code/prompts/*.txt` files and the old generator are NOT wired to the live scenario (reference only). All deprecated blueprints live in `code/make/_archive/`. Never edit anything but the MASTER.
+
 ## What KISS is
 
 KISS = "Keep Insurance Super Simple." A policy analysis service. Homeowner uploads their insurance policy PDF → GPT-4o extracts structured data → produces a plain-English, color-coded 1–3 page advisory report (turns a 60-page policy into something a client can actually use). Optionally produces a *second* report tailored to the referring partner (insurance broker advisory or property/PI attorney pre-claim analysis). Emails both copies — homeowner gets the consumer report, partner gets both with homeowner CC'd.
@@ -29,7 +31,8 @@ React form on Vercel → Supabase (Postgres + Storage + Auth + RLS) → Make.com
 │   ├── frontend/KissIntakeForm.jsx
 │   ├── supabase/schema.sql                    ← 5 tables + RLS + seed data
 │   ├── supabase/migrations/2026_04_30_add_renewal_tracking.sql
-│   ├── make/blueprint_v2.json                 ← 16-module scenario
+│   ├── make/blueprint_v2_MASTER.json          ← CANONICAL live scenario (Claude Sonnet)
+│   ├── make/_archive/                          ← deprecated blueprints (rollback only)
 │   ├── make/renewal-reminder-scenario-spec.md ← daily renewal scenario
 │   ├── emails/email_homeowner.html
 │   ├── emails/email_partner.html

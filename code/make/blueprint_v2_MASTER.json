@@ -1,0 +1,796 @@
+{
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 2245498,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "KISS-v2-Submission-Trigger"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}&select=*,tenants(*)",
+        "data": "",
+        "gzip": true,
+        "method": "get",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Accept",
+            "value": "application/vnd.pgrst.object+json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "label": "Fetch submission + tenant"
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}",
+        "data": "{\"status\":\"processing\",\"processing_started_at\":\"{{now}}\"}",
+        "gzip": true,
+        "method": "patch",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "label": "Mark processing"
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://diyctwdqmqwemswekyvb.supabase.co/storage/v1/object/sign/policies/{{2.pdf_storage_path}}",
+        "data": "{\"expiresIn\": 600}",
+        "gzip": true,
+        "method": "post",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "label": "Sign PDF URL (10 min)"
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://api.pdf.co/v1/pdf/convert/to/text",
+        "data": "{\"url\":\"https://diyctwdqmqwemswekyvb.supabase.co/storage/v1{{4.signedURL}}\",\"inline\":true,\"async\":false}",
+        "gzip": true,
+        "method": "post",
+        "headers": [
+          {
+            "name": "x-api-key",
+            "value": "keith@optimizinggroup.com_IGUE3YoqTZvkmwk4DdJvN7xrpXBGETHntqWNH5Aeo2GD7LxdCtbU2lYRFMpo0edi"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "label": "Extract PDF text (PDF.co)"
+      }
+    },
+    {
+      "id": 6,
+      "module": "anthropic-claude:createAMessage",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8959268
+      },
+      "mapper": {
+        "model": "claude-3-5-sonnet-20241022",
+        "temperature": 0.1,
+        "max_tokens": 2048,
+        "messages": [
+          {
+            "role": "user",
+            "content": "You are an insurance policy data extraction specialist. Extract these fields from the policy and return ONLY raw JSON with no markdown:\n{\n  \"named_insured\": \"\",\n  \"property_address\": \"\",\n  \"policy_number\": \"\",\n  \"policy_effective_date\": \"\",\n  \"policy_expiration_date\": \"\",\n  \"insurance_company\": \"\",\n  \"policy_type\": \"\",\n  \"policy_class\": \"\",\n  \"coverages\": [{\"type\": \"\", \"limit\": \"\", \"deductible\": \"\"}],\n  \"exclusions\": [],\n  \"endorsements\": [],\n  \"total_annual_premium\": \"\"\n}\n\nRules:\n- Dates in ISO 8601 (YYYY-MM-DD) or empty string \"\"\n- policy_class is EXACTLY \"auto\" (for any personal auto / PAP / PIP / motorcycle) or \"residential\" (for HO-3/5/6/8, DP-3, condo, renter, BOP, CGL, property). If ambiguous default to \"residential\".\n- Missing non-date fields = \"Not found\"\n- Return ONLY JSON, no commentary.\n\nPolicy document:\n{{5.body}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "label": "Extract policy JSON"
+      }
+    },
+    {
+      "id": 7,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{6.output[].content[].text}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "label": "Parse extraction"
+      }
+    },
+    {
+      "id": 8,
+      "module": "anthropic-claude:createAMessage",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8959268
+      },
+      "mapper": {
+        "model": "claude-3-5-sonnet-20241022",
+        "temperature": 0.3,
+        "max_tokens": 4096,
+        "messages": [
+          {
+            "role": "user",
+            "content": "You are KISS — a Florida-licensed insurance expert (14,000+ claims) helping policyholders understand their coverage in clear, plain English.\n\nThe policy has policy_class = \"{{7.policy_class}}\".\n\nIf policy_class is \"auto\": the input is often a declarations page only — review what IS listed and treat any coverage NOT shown as not carried (in FL, UM/UIM requires a signed written rejection, so absence means the driver is going without it; do not say the full policy is needed). Flag FL-specific risks — PIP at the $10K minimum is too low (🟡); UM/UIM absent or rejected = 🔴 (1-in-4 FL drivers are uninsured); BI liability (🔴 below 25/50, 🟡 at 25/50, 🟢 at 100/300+); recommend STACKED UM on multi-vehicle policies; MedPay 🟡 if absent. Deductibles: judge against the car age (compute from the vehicle year). Newer/financed car (0-5 yrs) → a low $250-$500 deductible fits and comp/collision should stay; older low-value car (10+ yrs) → a high deductible or dropping comp/collision may make sense (show the cost-benefit). Always state the car age, the deductible $ amount, and a one-line \"for a [year] [make/model], a $X deductible fits / is high / is low\" verdict.\n\nIf policy_class is \"residential\": flag FL-specific risks — dwelling vs rebuild cost ($200-250/sq ft), hurricane deductible, flood, sinkhole, mold cap, ACV vs RC roof, wind mitigation, scheduled items.\n\nProduce a 1-3 page HTML report (no markdown). Structure:\n1. Header: KISS horizontal logo at the very top, then \"Your {{2.policy_type}} Policy Review\" + \"Prepared for {{2.contact_name}}\". Logo HTML: <img src=\"https://kiss.optimizinggroup.com/assets/kiss-horizontal-logo.png\" alt=\"Keep Insurance Super Simple\" style=\"height:46px;width:auto;display:block;margin-bottom:12px;\" />\n2. Executive Summary (2-3 sentences, plain English)\n3. \"At a glance\" table with coverage / amount / status badge / plain English. Use these inline-styled badges:\n   - 🟢 Good: <span style=\"display:inline-block;padding:2px 10px;background:#d6f5e3;color:#0e6b40;border-radius:999px;font-size:0.78rem;font-weight:700;\">🟢 Good</span>\n   - 🟡 Sufficient: <span style=\"display:inline-block;padding:2px 10px;background:#fff5d6;color:#946a00;border-radius:999px;font-size:0.78rem;font-weight:700;\">🟡 Sufficient</span>\n   - 🔴 Needs Attention: <span style=\"display:inline-block;padding:2px 10px;background:#fde8e8;color:#a51919;border-radius:999px;font-size:0.78rem;font-weight:700;\">🔴 Needs Attention</span>\n4. \"What needs attention\" — detail blocks for each 🔴 / 🟡 finding with real $ examples and \"What to do\" recommendation\n5. \"What to do next\" — numbered list of 3 concrete actions\n\nWrap in <div class=\"kiss-report\" style=\"font-family:'Albert Sans',Arial,sans-serif;color:#1a2236;line-height:1.6;max-width:680px;margin:0 auto;\">…</div>\n\nRules: no outcome promises, no legal advice, no specific carrier recommendations, no fear-framing. Direct, helpful, neighborly tone. Active voice. Plain English first, jargon second.\n\nProperty: {{2.property_address}} · {{2.sq_footage}} sq ft · built {{2.year_built}}\n\nExtracted policy data:\n{{7}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0
+        },
+        "label": "Generate consumer report"
+      }
+    },
+    {
+      "id": 9,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/reports",
+        "data": "{\"submission_id\":\"{{1.submission_id}}\",\"tenant_id\":\"{{2.tenant_id}}\",\"report_type\":\"consumer\",\"extracted_json\":{{7}},\"report_body\":\"{{8.output[].content[].text}}\"}",
+        "gzip": true,
+        "method": "post",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Prefer",
+            "value": "return=minimal"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 2400,
+          "y": 0
+        },
+        "label": "Save consumer report"
+      }
+    },
+    {
+      "id": 10,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://api.resend.com/emails",
+        "data": "{\"from\":\"KISS Policy Review <reports@kiss.optimizinggroup.com>\",\"to\":[\"{{2.contact_email}}\"],\"subject\":\"Your KISS Policy Review Is Ready\",\"html\":\"<p>Hi {{2.contact_name}},</p><p>Your free policy review (powered by {{2.tenants.brand_name}}) is below.</p>{{8.output[].content[].text}}<p style=\\\"font-size:11px;color:#888;margin-top:24px;\\\">KISS — Keep Insurance Super Simple · For informational purposes only · Not legal or financial advice</p>\"}",
+        "gzip": true,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 2700,
+          "y": 0
+        },
+        "label": "Email homeowner"
+      }
+    },
+    {
+      "id": 11,
+      "module": "anthropic-claude:createAMessage",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8959268
+      },
+      "mapper": {
+        "model": "claude-3-5-sonnet-20241022",
+        "temperature": 0.2,
+        "max_tokens": 4096,
+        "messages": [
+          {
+            "role": "user",
+            "content": "You are a senior insurance broker consultant generating an advisory report for the broker {{2.tenants.brand_name}} about their client {{2.contact_name}}'s policy.\n\nProperty: {{2.property_address}}, {{2.sq_footage}} sq ft, built {{2.year_built}}\n\nProduce a 5-section HTML report (no markdown):\n\nSECTION 1 — POLICY SNAPSHOT (1 paragraph summary of carrier, type, premium, key limits)\n\nSECTION 2 — COVERAGE ADEQUACY\nUse FL rebuild cost $200-250/sq ft. Flag any coverage that is materially under-insured. Use plain $ examples.\n\nSECTION 3 — SAVINGS OPPORTUNITIES\nIdentify endorsements that can be dropped, deductibles that could be raised cost-effectively, bundling opportunities.\n\nSECTION 4 — COVERAGE GAPS\nBuried exclusions, capped sublimits, missing endorsements that create real claim exposure.\n\nSECTION 5 — TALKING POINTS FOR {{2.tenants.brand_name}}\n3-5 concrete bullets the broker can use in a renewal conversation with this client.\n\nTone: peer-to-peer, technical but actionable. No fluff. End with a one-line disclaimer that this is advisory, not a binding coverage opinion.\n\nExtracted policy data:\n{{7}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 3000,
+          "y": 0
+        },
+        "label": "Generate broker report"
+      },
+      "filter": {
+        "name": "Only broker",
+        "conditions": [
+          [
+            {
+              "a": "{{2.tenants.persona}}",
+              "b": "broker",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/reports",
+        "data": "{\"submission_id\":\"{{1.submission_id}}\",\"tenant_id\":\"{{2.tenant_id}}\",\"report_type\":\"broker\",\"extracted_json\":{{7}},\"report_body\":\"{{11.output[].content[].text}}\"}",
+        "gzip": true,
+        "method": "post",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Prefer",
+            "value": "return=minimal"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": 0
+        },
+        "label": "Save broker report"
+      },
+      "filter": {
+        "name": "Only broker",
+        "conditions": [
+          [
+            {
+              "a": "{{2.tenants.persona}}",
+              "b": "broker",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://api.resend.com/emails",
+        "data": "{\"from\":\"KISS Policy Review <reports@kiss.optimizinggroup.com>\",\"to\":[\"{{2.tenants.contact_email}}\"],\"cc\":[\"{{2.contact_email}}\"],\"subject\":\"New KISS Policy Review — {{2.contact_name}}\",\"html\":\"<p>Hi {{2.tenants.brand_name}} team,</p><p>Broker advisory report for new lead {{2.contact_name}} ({{2.contact_email}}):</p>{{11.output[].content[].text}}<hr><p>Consumer report sent to homeowner:</p>{{8.output[].content[].text}}\"}",
+        "gzip": true,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3600,
+          "y": 0
+        },
+        "label": "Email broker"
+      },
+      "filter": {
+        "name": "Only broker",
+        "conditions": [
+          [
+            {
+              "a": "{{2.tenants.persona}}",
+              "b": "broker",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "module": "anthropic-claude:createAMessage",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8959268
+      },
+      "mapper": {
+        "model": "claude-3-5-sonnet-20241022",
+        "temperature": 0.2,
+        "max_tokens": 4096,
+        "messages": [
+          {
+            "role": "user",
+            "content": "You are a Florida property damage attorney reviewing a policy PRE-CLAIM for {{2.tenants.brand_name}}. The policyholder is {{2.contact_name}}.\n\nProperty: {{2.property_address}}, {{2.sq_footage}} sq ft, built {{2.year_built}}\n\nProduce a 5-section HTML report (no markdown):\n\nSECTION 1 — POLICY OVERVIEW (1 paragraph: carrier, type, term, premium)\n\nSECTION 2 — CLAIM RISK ANALYSIS\nRate each major exposure as HIGH / MEDIUM / LOW risk for future claim disputes. Cover: hurricane deductible, water damage caps, mold sublimit, ACV vs RC, sinkhole, ordinance & law, matching clause.\n\nSECTION 3 — FLORIDA-SPECIFIC CONCERNS\nFL property insurance market issues: assignment of benefits restrictions, attorney fee statute, one-way fee shifting changes, post-2023 reforms, citizens vs private carrier nuances.\n\nSECTION 4 — DOCUMENT NOW\nList specific items the homeowner should photograph / preserve / keep records of BEFORE a loss occurs.\n\nSECTION 5 — TALKING POINTS FOR {{2.tenants.brand_name}}\n3-5 bullets the firm can use in a client consultation to demonstrate proactive value.\n\nEnd with required legal disclaimer: \"This report is for informational purposes only, does not create an attorney-client relationship, and does not constitute legal advice. Consult {{2.tenants.brand_name}} directly for representation.\"\n\nExtracted policy data:\n{{7}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 3000,
+          "y": 0
+        },
+        "label": "Generate attorney report"
+      },
+      "filter": {
+        "name": "Only attorney",
+        "conditions": [
+          [
+            {
+              "a": "{{2.tenants.persona}}",
+              "b": "attorney",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/reports",
+        "data": "{\"submission_id\":\"{{1.submission_id}}\",\"tenant_id\":\"{{2.tenant_id}}\",\"report_type\":\"attorney\",\"extracted_json\":{{7}},\"report_body\":\"{{14.output[].content[].text}}\"}",
+        "gzip": true,
+        "method": "post",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Prefer",
+            "value": "return=minimal"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": 0
+        },
+        "label": "Save attorney report"
+      },
+      "filter": {
+        "name": "Only attorney",
+        "conditions": [
+          [
+            {
+              "a": "{{2.tenants.persona}}",
+              "b": "attorney",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://api.resend.com/emails",
+        "data": "{\"from\":\"KISS Policy Review <reports@kiss.optimizinggroup.com>\",\"to\":[\"{{2.tenants.contact_email}}\"],\"cc\":[\"{{2.contact_email}}\"],\"subject\":\"New KISS Policy Review — {{2.contact_name}}\",\"html\":\"<p>Hi {{2.tenants.brand_name}} team,</p><p>Pre-claim policy analysis for new lead {{2.contact_name}} ({{2.contact_email}}):</p>{{14.output[].content[].text}}<hr><p>Consumer-facing report sent to homeowner:</p>{{8.output[].content[].text}}\"}",
+        "gzip": true,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer re_9DbxPAwN_43ggNGjtEPj1EstSP2K3Hs98"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3600,
+          "y": 0
+        },
+        "label": "Email attorney"
+      },
+      "filter": {
+        "name": "Only attorney",
+        "conditions": [
+          [
+            {
+              "a": "{{2.tenants.persona}}",
+              "b": "attorney",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://diyctwdqmqwemswekyvb.supabase.co/rest/v1/submissions?id=eq.{{1.submission_id}}",
+        "data": "{\"status\":\"completed\",\"processing_completed_at\":\"{{now}}\"}",
+        "gzip": true,
+        "method": "patch",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer sb_secret_jGRqIYPkWHVkt1GOeDcwsQ_ebc3HNqL"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3900,
+          "y": 0
+        },
+        "label": "Mark completed"
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": true,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  },
+  "name": "KISS Insurance Policy Review v3 (Claude 3.5 Sonnet) — MASTER"
+}
