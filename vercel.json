@@ -3,5 +3,8 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": "vite",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "rewrites": [
+    { "source": "/((?!api/|@|.*\\.).*)", "destination": "/index.html" }
+  ]
 }
