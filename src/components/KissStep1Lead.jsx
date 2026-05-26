@@ -56,6 +56,26 @@ export default function KissStep1Lead({ slug }) {
     })();
   }, [slug]);
 
+  // Pre-fill from URL params (used by flood / auto upsell links after a review).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const policyType = params.get("policy_type");
+    const email = params.get("email");
+    if (!policyType && !email) return;
+    setForm((prev) => {
+      const next = { ...prev };
+      if (email && !prev.contact_email) next.contact_email = email;
+      if (policyType === "flood") {
+        next.policy_category = "homeowners";
+        next.policy_type = "flood_nfip";
+      } else if (policyType === "auto") {
+        next.policy_category = "auto";
+        next.policy_type = "auto_personal";
+      }
+      return next;
+    });
+  }, []);
+
   const resolveTenantByCode = async (code) => {
     if (!code) return null;
     const { data } = await supabase
@@ -259,6 +279,7 @@ export default function KissStep1Lead({ slug }) {
             <div style={{ flex: 1, height: 1, background: "#E0E0E0" }} />
           </div>
           <div style={{ textAlign: "center" }}>
+            <img src="/assets/kiss-horizontal-logo.png" alt="KISS Policy Review" style={{ maxHeight: 56, marginBottom: 8 }} />
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px", color: "#222" }}>KISS Policy Review</h2>
             <p style={styles.lead}>Free Insurance Policy Review</p>
             <p style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
