@@ -279,9 +279,8 @@ export default function KissStep1Lead({ slug }) {
             <div style={{ flex: 1, height: 1, background: "#E0E0E0" }} />
           </div>
           <div style={{ textAlign: "center" }}>
-            <img src="/assets/kiss-horizontal-logo.png" alt="KISS Policy Review" style={{ maxHeight: 56, marginBottom: 8 }} />
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px", color: "#222" }}>KISS Policy Review</h2>
-            <p style={styles.lead}>Free Insurance Policy Review</p>
+            <img src="/assets/kiss-horizontal-logo.png" alt="KISS Policy Review" style={{ width: "100%", height: "auto", display: "block", margin: "4px 0 10px" }} />
+            <p style={styles.lead}>Start Your Free Policy Review</p>
             <p style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
               Step 1 of 2 — tell us a bit about you and your policy. Next step you'll upload the document.
             </p>
